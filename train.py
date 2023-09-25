@@ -54,14 +54,14 @@ block_size = 256 #1024
 # model
 n_positions=2048
 rotary_dim = 64
-n_layer = 32
+n_layer = 16 #32
 n_head = 24 #16
 n_embd = 1536 #2048
 n_inner = None
 activation_function = "gelu_new"
 layer_norm_epsilon = 1e-5
 use_cache=True
-dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
+dropout = 0.05 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
