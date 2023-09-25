@@ -54,7 +54,7 @@ block_size = 256 #1024
 # model
 n_positions=2048
 rotary_dim = 64
-n_layer = 16 #32
+n_layer = 8 #32
 n_head = 24 #16
 n_embd = 1536 #2048
 n_inner = None
