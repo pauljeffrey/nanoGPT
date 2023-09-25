@@ -53,10 +53,10 @@ block_size = 256 #1024
 
 # model
 n_positions=2048
-rotary_dim = rotary_dim
-n_layer = 16
-n_head = 16
-n_embd = 768
+rotary_dim = 64
+n_layer = 32
+n_head = 24 #16
+n_embd = 1536 #2048
 n_inner = None
 activation_function = "gelu_new"
 layer_norm_epsilon = 1e-5
