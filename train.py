@@ -54,7 +54,9 @@ block_size = 256 #1024
 # model
 n_positions=2048
 rotary_dim = 64
-n_layer = 8 #32
+bos_token_id = 50256
+eos_token_id= 50256
+n_layer = 2 #32
 n_head = 24 #16
 n_embd = 1536 #2048
 n_inner = None
@@ -153,7 +155,7 @@ if os.path.exists(meta_path):
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size, rotary_dim=64,n_inner=n_inner,
                   bias=bias, vocab_size=None, dropout=dropout, activation_function=activation_function, layer_norm_epsilon=layer_norm_epsilon,
-                  use_cache=use_cache, bos_token_id=50304, eos_token_id=50304) # start with model_args from command line
+                  use_cache=use_cache, bos_token_id=bos_token_id, eos_token_id=eos_token_id) # start with model_args from command line
 if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
