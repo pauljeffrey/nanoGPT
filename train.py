@@ -50,20 +50,23 @@ gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
 batch_size = 4 # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 256 #1024
 
-
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    
 # model
 n_positions=2048
 rotary_dim = 64
-bos_token_id = 50256
-eos_token_id= 50256
-n_layer = 32
-n_head = 24 #16
-n_embd = 1536 #2048
+n_layer = 18 #16
+n_head = 20
+n_embd = 1280 #768
+bos_token_id = 50304
+eos_token_id = 50304
 n_inner = None
 activation_function = "gelu_new"
 layer_norm_epsilon = 1e-5
 use_cache=True
-dropout = 0.05 # for pretraining 0 is good, for finetuning try 0.1+
+dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
@@ -124,8 +127,8 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 
 # poor man's data loader
 data_dir = os.path.join('data', dataset)
-train_data = np.memmap("/kaggle/working/nanoGPT/data/openwebtext/train.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'train.bin')
-val_data = np.memmap("/kaggle/working/nanoGPT/data/openwebtext/val.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'val.bin')
+train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
+val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
 def get_batch(split):
     data = train_data if split == 'train' else val_data
     ix = torch.randint(len(data) - block_size, (batch_size,))
@@ -155,7 +158,8 @@ if os.path.exists(meta_path):
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size, rotary_dim=64,n_inner=n_inner,
                   bias=bias, vocab_size=None, dropout=dropout, activation_function=activation_function, layer_norm_epsilon=layer_norm_epsilon,
-                  use_cache=use_cache, bos_token_id=bos_token_id, eos_token_id=eos_token_id) # start with model_args from command line
+                  use_cache=use_cache, bos_token_id=50256, eos_token_id=50256) # start with model_args from command line
+     
 if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
@@ -200,6 +204,9 @@ elif init_from.startswith('gpt2'):
 if block_size < model.config.block_size:
     model.crop_block_size(block_size)
     model_args['block_size'] = block_size # so that the checkpoint will have the right value
+    
+# print the number of parameters that the model has
+print(f"Loading model with {count_parameters(model)/1e9} billion parameters...")
 model.to(device)
 
 # initialize a GradScaler. If enabled=False scaler is a no-op

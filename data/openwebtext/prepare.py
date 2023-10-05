@@ -6,6 +6,7 @@ from tqdm import tqdm
 import numpy as np
 import tiktoken
 from datasets import load_dataset # huggingface datasets
+import datasets
 
 # number of workers in .map() call
 # good number to use is ~order number of cpu cores // 2
@@ -19,12 +20,12 @@ num_proc_load_dataset = num_proc
 if __name__ == '__main__':
     # takes 54GB in huggingface .cache dir, about 8M documents (8,013,769)
     #dataset = load_dataset("openwebtext", num_proc=num_proc_load_dataset)
-    data_files = ["data/train-00001-of-00035-0ffa1b2c1533e462.parquet"]#, "train-00022-of-00035-64d5581b0d8c4437.parquet"]
+    data_files = ["data/train-00001-of-00035-0ffa1b2c1533e462.parquet","data/train-00002-of-00035-8d4d29f0bb986f30.parquet", "data/train-00023-of-00035-1751103bdc6eb74c.parquet","data/train-00031-of-00035-e8233b95e5b92059.parquet",]
+    download_config = datasets.DownloadConfig(force_download=True)
     # # ,"train-00002-of-00035-8d4d29f0bb986f30.parquet", "train-00023-of-00035-1751103bdc6eb74c.parquet","train-00031-of-00035-e8233b95e5b92059.parquet", "train-00029-of-00035-4fda4ad62c4ffb34.parquet",
     # # "train-00022-of-00035-64d5581b0d8c4437.parquet"]
     # #https://huggingface.co/datasets/vietgpt/the_pile_openwebtext2/blob/main/data/
-    dataset = load_dataset("vietgpt/the_pile_openwebtext2", num_proc=num_proc_load_dataset, data_files= data_files,
-    cache_dir= "/kaggle/temp/.cache/train_dataset",ignore_verifications=True)#verification_mode = None,
+    dataset = load_dataset("vietgpt/the_pile_openwebtext2", num_proc=num_proc_load_dataset, data_files= data_files, download_config = download_config, ignore_verifications=True)#, cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset") #verification_mode = None,cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset",
     # owt by default only contains the 'train' split, so create a test split
     print(dataset)
     split_dataset = dataset["train"].train_test_split(test_size=0.0005, seed=2357, shuffle=True)
