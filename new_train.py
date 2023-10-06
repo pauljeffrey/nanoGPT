@@ -144,7 +144,7 @@ if init_from == 'scratch':
     # Memory problems
     model.to(device)
 
-    print(f"Model created successfully. Model has {count_parameters(model) / 1e9} parameters...")
+    print(f"Model created successfully. Model has {count_parameters(model) / 1e6} million parameters...")
     # optimizer
     optimizer_cls = (
                 torch.optim.AdamW 
@@ -180,7 +180,7 @@ elif init_from == 'resume':
         #         state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
         model.load_state_dict(checkpoint['model'])
         
-        print(f"Model checkpoint loaded successfully. Model has {count_parameters(model)/1e9} parameters...")
+        print(f"Model checkpoint loaded successfully. Model has {count_parameters(model)/1e6} million parameters...")
         
         # optimizer
         optimizer_cls = (
