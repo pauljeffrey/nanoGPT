@@ -60,8 +60,8 @@ rotary_dim = 64
 n_layer = 18 #16
 n_head = 20
 n_embd = 1280 #768
-bos_token_id = 50304
-eos_token_id = 50304
+bos_token_id = 50256
+eos_token_id = 50256
 n_inner = None
 activation_function = "gelu_new"
 layer_norm_epsilon = 1e-5
@@ -85,7 +85,7 @@ backend = 'nccl' # 'nccl', 'gloo', etc.
 # system
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
-compile = True # use PyTorch 2.0 to compile the model to be faster
+compile = False # use PyTorch 2.0 to compile the model to be faster
 # -----------------------------------------------------------------------------
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
 exec(open('configurator.py').read()) # overrides from command line or config file
