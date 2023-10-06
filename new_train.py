@@ -6,10 +6,11 @@ from contextlib import nullcontext
 
 import numpy as np
 from accelerate import Accelerator, DeepSpeedPlugin
+from tqdm import tqdm
 
 
 from model import GPTConfig, GPT
-from transformers import GPTJConfig, GPTJForCausalLM
+from transformers import GPTJConfig, GPTJForCausalLM, get_scheduler
 import torch
 
 
@@ -66,6 +67,7 @@ lr_decay_iters = 600000 # should be ~= max_iters per Chinchilla
 min_lr = 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 device= "cuda"
 device_type = 'cuda' if 'cuda' in device else 'cpu' 
+scheduler = "cosine"
 
 # system
 #device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
@@ -78,6 +80,14 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # -----------------------------------------------------------------------------
 
 
+# Create accelerator
+deepspeed_plugin = DeepSpeedPlugin(zero_stage=3, gradient_accumulation_steps=gradient_accumulation_steps, gradient_clipping=1.0)
+accelerator= Accelerator(mixed_precision='fp16', deepspeed_plugin=deepspeed_plugin)
+accelerator.wait_for_everyone()
+device = accelerator.device
+
+
+
 data_dir = os.path.join('data', dataset)
 train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
 val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
@@ -87,13 +97,14 @@ val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r
 
 index = 0
 window = 64
-batch_slice = window * (batch_size - 1) + block_size
+batch_slice = window * (batch_size - 1) + block_size 
 
 # Dataloader
 def get_batch(split, mode = "eval"):
     if mode == 'train' and split == 'train':
         data = train_data
-        ix = range(index, batch_slice, window)
+        global index
+        ix = range( index, batch_slice, window)
         x = torch.stack([torch.from_numpy((data[i: i+ block_size]).astype(np.int64)) for i in ix])
         y = torch.stack([torch.from_numpy((data[i+1: i+1+block_size]).astype(np.int64)) for i in ix])
         index += batch_slice
@@ -115,16 +126,6 @@ def get_batch(split, mode = "eval"):
 iter_num = 0
 best_val_loss = 1e9
 
-# attempt to derive vocab_size from the dataset
-# meta_path = os.path.join(data_dir, 'meta.pkl')
-# meta_vocab_size = None
-# if os.path.exists(meta_path):
-#     with open(meta_path, 'rb') as f:
-#         meta = pickle.load(f)
-#     meta_vocab_size = meta['vocab_size']
-#     print(f"found vocab_size = {meta_vocab_size} (inside {meta_path})")
-
-
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size, rotary_dim=rotary_dim,n_inner=n_inner,
                   bias=bias, vocab_size=None, dropout=dropout, activation_function=activation_function, layer_norm_epsilon=layer_norm_epsilon,
@@ -140,55 +141,73 @@ if init_from == 'scratch':
     conf = GPTJConfig(**model_args)
     model = GPTJForCausalLM(conf)
     
+    # Memory problems
+    model.to(device)
+
+    print(f"Model created successfully. Model has {count_parameters(model) / 1e-9} parameters...")
+    # optimizer
+    optimizer_cls = (
+                torch.optim.AdamW 
+            )
+    optimizer = optimizer_cls(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+
+    lr_scheduler = get_scheduler(
+                                name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
+                                num_training_steps= max_iters,
+                            )
+    
 elif init_from == 'resume':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
-    checkpoint = torch.load(ckpt_path, map_location=device)
-    checkpoint_model_args = checkpoint['model_args']
-    # force these config attributes to be equal otherwise we can't even resume training
-    # the rest of the attributes (e.g. dropout) can stay as desired from command line
-    for k in ['n_layer', 'n_head', 'n_embd', 'block_size', 'bias', 'vocab_size']:
-        model_args[k] = checkpoint_model_args[k]
-    # create the model
-    conf = GPTConfig(**model_args)
-    model = GPTJForCausalLM(conf)
-    state_dict = checkpoint['model']
-    # fix the keys of the state dictionary :(
-    # honestly no idea how checkpoints sometimes get this prefix, have to debug more
-    unwanted_prefix = '_orig_mod.'
-    for k,v in list(state_dict.items()):
-        if k.startswith(unwanted_prefix):
-            print(K)
-            state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-    model.load_state_dict(state_dict)
-    iter_num = checkpoint['iter_num']
-    best_val_loss = checkpoint['best_val_loss']
+    if os.path.exists(ckpt_path):
+        checkpoint = torch.load(ckpt_path, map_location=device)
+        checkpoint_model_args = checkpoint['model_args']
+        # force these config attributes to be equal otherwise we can't even resume training
+        # the rest of the attributes (e.g. dropout) can stay as desired from command line
+        for k in ['n_layer', 'n_head', 'n_embd', 'block_size', 'bias', 'vocab_size']:
+            model_args[k] = checkpoint_model_args[k]
+        # create the model
+        conf = GPTConfig(**model_args)
+        model = GPTJForCausalLM(conf)
+        #state_dict = checkpoint['model']
+        # fix the keys of the state dictionary :(
+        # honestly no idea how checkpoints sometimes get this prefix, have to debug more
+        # unwanted_prefix = '_orig_mod.'
+        # for k,v in list(state_dict.items()):
+        #     if k.startswith(unwanted_prefix):
+        #         print(K)
+        #         state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
+        model.load_state_dict(checkpoint['model'])
+        
+        print(f"Model checkpoint loaded successfully. Model has {count_parameters(model)/1e-9} parameters...")
+        
+        # optimizer
+        optimizer_cls = (
+                    torch.optim.AdamW 
+                )
+        
+        optimizer = optimizer_cls(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+
+        lr_scheduler = get_scheduler(
+                            name= scheduler, optimizer=optimizer, num_warmup_steps= warmup_iters,
+                            num_training_steps= max_iters,
+                        )
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+        
+        iter_num = checkpoint['iter_num']
+        best_val_loss = checkpoint['best_val_loss']
+        
+    else:
+        print(f"Checkpoint path: '{ckpt_path}' does not exist...")
 
 # crop down the model block size if desired, using model surgery
-if block_size < model.config.block_size:
-    model.crop_block_size(block_size)
-    model_args['block_size'] = block_size # so that the checkpoint will have the right value
+# if block_size < model.config.block_size:
+#     model.crop_block_size(block_size)
+#     model_args['block_size'] = block_size # so that the checkpoint will have the right value
 
-# Create accelerator
-deepspeed_plugin = DeepSpeedPlugin(stage=3, gradient_accumulation_steps=gradient_accumulation_steps, gradient_clipping=1.0)
-accelerator= Accelerator(mixed_precision='fp16', deepspeed_plugin=deepspeed_plugin)
 
-device = accelerator.device
-
-# Memory problems
-model.to(device)
-
-# optimizer
-optimizer_cls = (
-            torch.optim.AdamW 
-        )
-optimizer = optimizer_cls(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
-
-if init_from == 'resume':
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    
-checkpoint=None #free up memory
 
 if compile:
     print("compiling the model.... (takes a ~minuter)")
@@ -196,7 +215,10 @@ if compile:
     model = torch.compile(model)
     
     
-# Wrap model and all other states in accelerate.
+# Prepare accelerator
+model, optimizer, lr_scheduler = accelerator.prepare(model, optimizer, lr_scheduler)
+
+checkpoint=None #free up memory
 
 
 @torch.no_grad()
@@ -207,26 +229,13 @@ def estimate_loss():
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y = get_batch(split)
-            output = model(input_ids=X, labels=Y)
-            
+            output = model(input_ids=X, labels=Y)            
             losses[k] = output.loss.item()
         out[split] = losses.mean()
     model.train()
     return out
 
-# learning rate decay scheduler (cosine with warmup)
-def get_lr(it):
-    # 1) linear warmup for warmup_iters steps
-    if it < warmup_iters:
-        return learning_rate * it / warmup_iters
-    # 2) if it > lr_decay_iters, return min learning rate
-    if it > lr_decay_iters:
-        return min_lr
-    # 3) in between, use cosine decay down to min learning rate
-    decay_ratio = (it - warmup_iters) / (lr_decay_iters - warmup_iters)
-    assert 0 <= decay_ratio <= 1
-    coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio)) # coeff ranges 0..1
-    return min_lr + coeff * (learning_rate - min_lr)
+
 
 #logging
 if wandb_log:
@@ -236,16 +245,11 @@ if wandb_log:
 X, Y = get_batch('train', 'train')
 t0 = time.time()
 
-local_iter_num = 0 # number of iteractions in the lifetime of this process
+
 running_mfu = -1.0
 
+progress_bar = tqdm(range(max_iters))
 while True:
-    
-    # determine and set the learning rate for this iteration
-    lr = get_lr(iter_num) if decay_lr else learning_rate
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-
     # evaluate the loss on train/val sets and write checkpoints
     if iter_num % eval_interval == 0:
         losses = estimate_loss()
@@ -255,7 +259,7 @@ while True:
                 "iter": iter_num,
                 "train/loss": losses['train'],
                 "val/loss": losses['val'],
-                "lr": lr,
+                "lr": optimizer.lr,
                 "mfu": running_mfu*100, # convert to percentage
             })
             
@@ -265,6 +269,7 @@ while True:
                 checkpoint = {
                     'model': accelerator.unwrap_model(model).state_dict(),
                     'optimizer': optimizer.state_dict(),
+                    'lr_scheduler': lr_scheduler.state_dict(),
                     'model_args': model_args,
                     'iter_num': iter_num,
                     'best_val_loss': best_val_loss,
@@ -276,9 +281,11 @@ while True:
     if iter_num == 0 and eval_only:
         break
 
+    train_loss = 0
     # forward backward update, with optional gradient accumulation to simulate larger batch size
     for micro_step in range(gradient_accumulation_steps):
         outputs = model(input_ids=X, labels=Y)
+        train_loss += (outputs.loss.item() / gradient_accumulation_steps)
         loss = outputs.loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
         X, Y = get_batch('train')
@@ -286,23 +293,20 @@ while True:
         
     # clip the gradient
     optimizer.step()
+    lr_scheduler.step()
     # flush the gradients as soon as we can, no need for this memory anymore
-    optimizer.zero_grad(set_to_none=True)
+    optimizer.zero_grad()
+    progress_bar.update(1)
 
     # timing and logging
     t1 = time.time()
     dt = t1 - t0
     t0 = t1
+    
     if iter_num % log_interval == 0:
-        # get loss as float. note: this is a CPU-GPU sync point
-        # scale up to undo the divisilon above, approximating the true total loss (exact would have been a sum)
-        lossf = loss.item() * gradient_accumulation_steps
-        # if local_iter_num >= 5: # let the training loop settle a bit
-        #     mfu = raw_model.estimate_mfu(batch_size * gradient_accumulation_steps, dt)
-        #     running_mfu = mfu if running_mfu == -1.0 else 0.9*running_mfu + 0.1*mfu
-        print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+        print(f"iter {iter_num}: loss {train_loss:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+        
     iter_num += 1
-    local_iter_num += 1
 
     # termination conditions
     if iter_num > max_iters:

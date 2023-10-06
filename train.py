@@ -30,6 +30,10 @@ from torch.distributed import init_process_group, destroy_process_group
 from model import GPTConfig, GPT
 from transformers import GPTJConfig, GPTJForCausalLM
 
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
@@ -48,11 +52,7 @@ wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
 dataset = 'openwebtext'
 gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
 batch_size = 4 # if gradient_accumulation_steps > 1, this is the micro-batch size
-block_size = 256 #1024
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
-    
+block_size = 256 #1024 
     
 # model
 n_positions=2048
