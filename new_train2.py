@@ -212,7 +212,7 @@ def estimate_loss():
     for X, Y in val_dataloader:
         output = model(input_ids=X, labels=Y)            
         losses.append(output.loss.item())
-    out["eval"] = torch.mean(losses)
+    out["eval"] = torch.mean(torch.tensor[losses])
     model.train()
     return out
 
