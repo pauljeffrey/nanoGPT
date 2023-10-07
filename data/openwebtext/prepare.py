@@ -53,6 +53,7 @@ if __name__ == '__main__':
     # concatenate all the ids in each dataset into one large file we can use for training
     for split, dset in tokenized.items():
         arr_len = np.sum(dset['len'], dtype=np.uint64)
+        print("Array length:" ,arr_len)
         #filename = os.path.join(os.path.dirname(_data_dir_), f'{split}.bin')
         filename = os.path.join('/kaggle/working', f'{split}.bin')
         dtype = np.uint16 # (can do since enc.max_token_value == 50256 is < 2**16)

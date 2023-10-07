@@ -3,6 +3,7 @@ import time
 import math
 import pickle
 from contextlib import nullcontext
+from dataset import *
 
 import numpy as np
 from accelerate import Accelerator, DeepSpeedPlugin
@@ -217,7 +218,7 @@ if compile:
     
     
 # Prepare accelerator
-model, optimizer, lr_scheduler = accelerator.prepare(model, optimizer, lr_scheduler)
+model, optimizer, lr_scheduler, train_data = accelerator.prepare(model, optimizer, lr_scheduler, train_data)
 
 checkpoint=None #free up memory
 
