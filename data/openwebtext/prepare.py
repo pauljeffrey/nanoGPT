@@ -23,9 +23,9 @@ if __name__ == '__main__':
     # Don't use 0, 9, 28
     data_files = ["data/train-00001-of-00035-0ffa1b2c1533e462.parquet","data/train-00002-of-00035-8d4d29f0bb986f30.parquet", 
                   "data/train-00023-of-00035-1751103bdc6eb74c.parquet","data/train-00031-of-00035-e8233b95e5b92059.parquet",
-    "train-00014-of-00035-8d4d29f0bb986f30.parquet", "train-00015-of-00035-1751103bdc6eb74c.parquet","train-00016-of-00035-e8233b95e5b92059.parquet", 
-    "train-00029-of-00035-4fda4ad62c4ffb34.parquet", "train-00022-of-00035-64d5581b0d8c4437.parquet","train-00017-of-00035-64d5581b0d8c4437.parquet",
-    "train-00018-of-00035-64d5581b0d8c4437.parquet"]#,"train-00020-of-00035-64d5581b0d8c4437.parquet","train-00003-of-00035-64d5581b0d8c4437.parquet",]
+    "data/train-00014-of-00035-8d4d29f0bb986f30.parquet", "data/train-00015-of-00035-1751103bdc6eb74c.parquet","data/train-00016-of-00035-e8233b95e5b92059.parquet", 
+    "data/train-00029-of-00035-4fda4ad62c4ffb34.parquet", "data/train-00022-of-00035-64d5581b0d8c4437.parquet","data/train-00017-of-00035-64d5581b0d8c4437.parquet",
+    "data/train-00018-of-00035-64d5581b0d8c4437.parquet"]#,"train-00020-of-00035-64d5581b0d8c4437.parquet","train-00003-of-00035-64d5581b0d8c4437.parquet",]
     
     # download_config = datasets.DownloadConfig(force_download=True)
     # #https://huggingface.co/datasets/vietgpt/the_pile_openwebtext2/blob/main/data/
