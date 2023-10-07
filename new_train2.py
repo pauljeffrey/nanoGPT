@@ -238,18 +238,18 @@ for epoch in range(epochs):
         # evaluate the loss on train/val sets and write checkpoints
         if iter_num % eval_interval == 0:
             eval_loss = estimate_loss()
-            print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['val']:.4f}")
+            print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
             if wandb_log:
                 wandb.log({
                     "iter": iter_num,
                     "train/loss": eval_loss['train'],
-                    "val/loss": eval_loss['val'],
+                    "val/loss": eval_loss['eval'],
                     "lr": optimizer.lr,
                     "mfu": running_mfu*100, # convert to percentage
                 })
                 
             if eval_loss['val'] < best_val_loss or always_save_checkpoint:
-                best_val_loss = eval_loss['val']
+                best_val_loss = eval_loss['eval']
                 if iter_num > 0:
                     checkpoint = {
                         'model': accelerator.unwrap_model(model).state_dict(),
