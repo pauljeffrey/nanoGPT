@@ -29,7 +29,7 @@ class TextDataset(Dataset):
             y = torch.from_numpy((self.data[(i*self.window)+1: (i* self.window)+1+ self.block_size]).astype(np.int64))
 
         else:
-            i = random.choice(random.sample(range(len(self.data) - self.block_size), random.choice(range(self.len))))
+            #i = random.choice(random.sample(range(len(self.data) - self.block_size), random.choice(range(self.len))))
             x = torch.from_numpy((self.data[i:i+self.block_size]).astype(np.int64))
     
             y = torch.from_numpy((self.data[i+1:i+1+self.block_size]).astype(np.int64))
