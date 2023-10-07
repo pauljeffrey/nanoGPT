@@ -89,11 +89,11 @@ device = accelerator.device
 
 
 data_dir = os.path.join('data', dataset)
-train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
-val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
+# train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
+# val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
 
-# train_data = np.memmap("/kaggle/working/nanoGPT/data/openwebtext/train.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'train.bin')
-# val_data = np.memmap("/kaggle/working/nanoGPT/data/openwebtext/val.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'val.bin')
+train_data = np.memmap("/kaggle/working/train.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'train.bin')
+val_data = np.memmap("/kaggle/working/val.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'val.bin')
 
 index = 0
 window = 64
