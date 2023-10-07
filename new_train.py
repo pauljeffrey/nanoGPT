@@ -5,7 +5,7 @@ import pickle
 from contextlib import nullcontext
 
 import numpy as np
-from accelerate import Accelerator, DeepSpeedPlugin, AcceleratorState
+from accelerate import Accelerator, DeepSpeedPlugin
 from tqdm import tqdm
 
 
@@ -84,7 +84,7 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 deepspeed_plugin = DeepSpeedPlugin(zero_stage=3, gradient_accumulation_steps=gradient_accumulation_steps, 
                                    train_micro_batch_size_per_gpu= batch_size, gradient_clipping=1.0)
 accelerator= Accelerator(mixed_precision='fp16', deepspeed_plugin=deepspeed_plugin)
-AcceleratorState().deepspeed_plugin.deepspeed_config['train_micro_batch_size_per_gpu'] = batch_size
+#AcceleratorState().deepspeed_plugin.deepspeed_config['train_micro_batch_size_per_gpu'] = batch_size
 accelerator.wait_for_everyone()
 device = accelerator.device
 
