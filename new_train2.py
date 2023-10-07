@@ -242,13 +242,13 @@ for epoch in range(epochs):
             if wandb_log:
                 wandb.log({
                     "iter": iter_num,
-                    "train/loss": eval_loss['train'],
+                    "train/loss": train_losses/(iter_num+1),
                     "val/loss": eval_loss['eval'],
                     "lr": optimizer.lr,
                     "mfu": running_mfu*100, # convert to percentage
                 })
                 
-            if eval_loss['val'] < best_val_loss or always_save_checkpoint:
+            if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
                 best_val_loss = eval_loss['eval']
                 if iter_num > 0:
                     checkpoint = {
