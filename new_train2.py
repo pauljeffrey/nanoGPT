@@ -231,7 +231,7 @@ running_mfu = -1.0
 
 progress_bar = tqdm(range(max_iters))
 
-for epoch in epochs:
+for epoch in range(epochs):
     train_losses = 0
     for iter_num , (X , Y) in enumerate(train_dataloader):
         train_loss = 0
