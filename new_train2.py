@@ -199,7 +199,7 @@ if compile:
     
     
 # Prepare accelerator
-model, optimizer, lr_scheduler, train_data = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
+model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
 
 checkpoint= None #free up memory
 
