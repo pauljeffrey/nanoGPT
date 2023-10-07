@@ -45,9 +45,9 @@ block_size = 256 #1024
 # model
 n_positions=2048
 rotary_dim = 64
-n_layer = 18 #16
-n_head = 20
-n_embd = 1280 #768
+n_layer = 20 #18 #16
+n_head = 24 #20
+n_embd = 1536 #1280 #768
 bos_token_id = 50256
 eos_token_id = 50256
 n_inner = None
@@ -238,7 +238,8 @@ for epoch in range(epochs):
         # evaluate the loss on train/val sets and write checkpoints
         if iter_num % eval_interval == 0:
             eval_loss = estimate_loss()
-            print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
+            if train_losses > 0:
+                print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
             if wandb_log:
                 wandb.log({
                     "iter": iter_num,
@@ -261,7 +262,9 @@ for epoch in range(epochs):
                         'config': config,
                     }
                     print(f"saving checkpoint to {out_dir}")
-                    torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                    if os.path.exists(os.path.abspath(out_dir)):
+                        os.mkdir(os.path.abspath(out_dir))
+                    torch.save(checkpoint, os.path.join(os.path.abspath(out_dir), 'ckpt.pt'))
                     
         if iter_num == 0 and eval_only:
             break
