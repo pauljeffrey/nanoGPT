@@ -35,9 +35,9 @@ class TextDataset(Dataset):
             y = torch.from_numpy((self.data[i+1:i+1+self.block_size]).astype(np.int64))
             
         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
-        x, y = x.pin_memory().to(self.device, non_blocking=True), y.pin_memory().to(self.device, non_blocking=True)
+        #x, y = x.pin_memory().to(self.device, non_blocking=True), y.pin_memory().to(self.device, non_blocking=True)
         
-        #x, y = x.to(self.device), y.to(self.device)
+        x, y = x.to(self.device), y.to(self.device)
         
         return x, y
         
