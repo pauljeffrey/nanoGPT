@@ -240,8 +240,8 @@ for epoch in range(epochs):
         # evaluate the loss on train/val sets and write checkpoints
         if iter_num % eval_interval == 0:
             eval_loss = estimate_loss()
-            if train_losses > 0:
-                print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
+            #if train_losses > 0:
+            print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
             if wandb_log:
                 wandb.log({
                     "iter": iter_num,
