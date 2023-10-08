@@ -265,7 +265,7 @@ for epoch in range(epochs):
                     }
                     out_dir = os.path.join(root_dir, out_dir)
                     print(f"saving checkpoint to {out_dir}")
-                    if os.path.exists(out_dir):
+                    if not os.path.exists(out_dir):
                         os.mkdir(out_dir)
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
