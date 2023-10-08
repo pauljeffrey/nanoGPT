@@ -65,7 +65,7 @@ def get_loader(data_path,
     data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=batch_size,
                                               shuffle= shuffle,
-                                              num_workers = 2
+                                              num_workers = 20
                                               )
     return data_loader
         
