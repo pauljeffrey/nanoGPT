@@ -21,6 +21,7 @@ def count_parameters(model):
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
+root_dir = "/kaggle/working"
 out_dir = 'out'
 eval_interval = 2000
 log_interval = 256
@@ -261,10 +262,11 @@ for epoch in range(epochs):
                         'best_val_loss': best_val_loss,
                         'config': config,
                     }
+                    out_dir = os.path.join(root_dir, out_dir)
                     print(f"saving checkpoint to {out_dir}")
-                    if os.path.exists(os.path.abspath(out_dir)):
-                        os.mkdir(os.path.abspath(out_dir))
-                    torch.save(checkpoint, os.path.join(os.path.abspath(out_dir), 'ckpt.pt'))
+                    if os.path.exists(out_dir):
+                        os.mkdir(out_dir)
+                    torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
         if iter_num == 0 and eval_only:
             break
