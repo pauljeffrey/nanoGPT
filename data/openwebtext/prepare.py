@@ -59,7 +59,7 @@ if __name__ == '__main__':
         #filename = os.path.join(os.path.dirname(_data_dir_), f'{split}.bin')
         filename = os.path.join('/kaggle/working', f'{split}.bin')
         dtype = np.uint16 # (can do since enc.max_token_value == 50256 is < 2**16)
-        arr = np.memmap(filename, dtype=dtype, mode='w+', shape=(arr_len,))
+        arr = np.memmap(filename, dtype=dtype, mode='r+') #, shape=(arr_len,))
         total_batches = 1024 if split == 'train' else 128
 
         idx = 0
