@@ -40,7 +40,8 @@ wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
 # data
 dataset = 'openwebtext'
 gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
-batch_size = 1 # if gradient_accumulation_steps > 1, this is the micro-batch size
+train_batch_size = 1 # if gradient_accumulation_steps > 1, this is the micro-batch size
+eval_batch_size = train_batch_size * 128
 block_size = 256 #1024
 
 # model
@@ -99,10 +100,10 @@ data_dir = os.path.join('data', dataset)
  
 
 # Dataloader
-train_dataloader = get_loader("/kaggle/working/train.bin",  batch_size,
+train_dataloader = get_loader("/kaggle/working/train.bin",  train_batch_size,
                window = window, block_size= block_size, split_type= 'train', device= accelerator.device, shuffle = True) #os.path.join(data_dir, 'train.bin')
 
-val_dataloader = get_loader("/kaggle/working/val.bin",  batch_size, window = window, block_size= block_size, split_type= 'eval',
+val_dataloader = get_loader("/kaggle/working/val.bin",  eval_batch_size, window = window, block_size= block_size, split_type= 'eval',
                device= accelerator.device, shape = (block_size * eval_iters,), shuffle = False) #os.path.join(data_dir, 'val.bin')
 
 
