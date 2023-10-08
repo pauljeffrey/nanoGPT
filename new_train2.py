@@ -140,7 +140,7 @@ if init_from == 'scratch':
                                 name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
                                 num_training_steps= max_iters,
                             )
-    
+    last_step = 0
 elif init_from == 'resume':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.
@@ -181,12 +181,12 @@ elif init_from == 'resume':
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
-        iter_num = checkpoint['iter_num']
+        last_step = checkpoint['iter_num']
         best_val_loss = checkpoint['best_val_loss']
         
     else:
         print(f"Checkpoint path: '{ckpt_path}' does not exist...")
-
+        last_step = 0
 # crop down the model block size if desired, using model surgery
 # if block_size < model.config.block_size:
 #     model.crop_block_size(block_size)
@@ -241,6 +241,8 @@ progress_bar = tqdm(range(max_iters))
 for epoch in range(epochs):
     train_losses = 0
     for iter_num , (X , Y) in enumerate(train_dataloader):
+        if iter_num < last_step:
+            continue
         train_loss = 0
         # evaluate the loss on train/val sets and write checkpoints
         if iter_num % eval_interval == 0:
