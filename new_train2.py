@@ -231,6 +231,10 @@ t0 = time.time()
 
 running_mfu = -1.0
 
+# Create output directory if it doesn't exist
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
+
 progress_bar = tqdm(range(max_iters))
 
 for epoch in range(epochs):
@@ -265,8 +269,7 @@ for epoch in range(epochs):
                     }
                     out_dir = os.path.join(root_dir, out_dir)
                     print(f"saving checkpoint to {out_dir}")
-                    if not os.path.exists(out_dir):
-                        os.mkdir(out_dir)
+                    
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
         if iter_num == 0 and eval_only:
