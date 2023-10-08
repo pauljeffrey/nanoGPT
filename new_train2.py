@@ -232,6 +232,7 @@ t0 = time.time()
 running_mfu = -1.0
 
 # Create output directory if it doesn't exist
+out_dir = os.path.join(root_dir, out_dir)
 if not os.path.exists(out_dir):
     os.mkdir(out_dir)
 
@@ -267,7 +268,7 @@ for epoch in range(epochs):
                         'best_val_loss': best_val_loss,
                         'config': config,
                     }
-                    out_dir = os.path.join(root_dir, out_dir)
+                    
                     print(f"saving checkpoint to {out_dir}")
                     
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
