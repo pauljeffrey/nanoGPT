@@ -100,10 +100,10 @@ data_dir = os.path.join('data', dataset)
  
 
 # Dataloader
-train_dataloader = get_loader("/kaggle/working/train.bin",  train_batch_size,
+train_dataloader = get_loader("/kaggle/working/train.bin", 2, # train_batch_size,
                window = window, block_size= block_size, split_type= 'train', device= accelerator.device, shuffle = True) #os.path.join(data_dir, 'train.bin')
 
-val_dataloader = get_loader("/kaggle/working/val.bin",  eval_batch_size, window = window, block_size= block_size, split_type= 'eval',
+val_dataloader = get_loader("/kaggle/working/val.bin",  2, window = window, block_size= block_size, split_type= 'eval',
                device= accelerator.device, shape = (block_size * eval_iters,), shuffle = False) #os.path.join(data_dir, 'val.bin')
 
 
