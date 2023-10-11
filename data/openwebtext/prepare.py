@@ -24,12 +24,12 @@ if __name__ == '__main__':
     data_files = ["data/train-00001-of-00035-0ffa1b2c1533e462.parquet","data/train-00002-of-00035-8d4d29f0bb986f30.parquet",
                   "data/train-00023-of-00035-1751103bdc6eb74c.parquet", "data/train-00031-of-00035-e8233b95e5b92059.parquet",
                   "data/train-00017-of-00035-e3e493e9d916d4f5.parquet", "data/train-00015-of-00035-b51782f9289bc156.parquet",
-                  "data/train-00016-of-00035-5114eb1a53695860.parquet","data/train-00018-of-00035-aff94553959b76bb.parquet",
-                  "data/train-00019-of-00035-4a50511881e93615.parquet",
-        "data/train-00032-of-00035-65723db2a29abae8.parquet","data/train-00033-of-00035-bcb2a36aebfb89f9.parquet",
-                  "data/train-00034-of-00035-3244e25f0c60266d.parquet","data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
-                  "data/train-00030-of-00035-7722c3ba07048ce8.parquet", "data/train-00027-of-00035-35cffad4db0bf6b9.parquet",
-                  "data/train-00026-of-00035-b0969ddc6407c018.parquet"]#,"train-00020-of-00035-64d5581b0d8c4437.parquet","train-00003-of-00035-64d5581b0d8c4437.parquet",]
+                  "data/train-00016-of-00035-5114eb1a53695860.parquet","data/train-00018-of-00035-aff94553959b76bb.parquet",]
+                #   "data/train-00019-of-00035-4a50511881e93615.parquet",]
+        # "data/train-00032-of-00035-65723db2a29abae8.parquet","data/train-00033-of-00035-bcb2a36aebfb89f9.parquet",
+        #           "data/train-00034-of-00035-3244e25f0c60266d.parquet","data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
+        #           "data/train-00030-of-00035-7722c3ba07048ce8.parquet", "data/train-00027-of-00035-35cffad4db0bf6b9.parquet",
+        #           "data/train-00026-of-00035-b0969ddc6407c018.parquet"]#,"train-00020-of-00035-64d5581b0d8c4437.parquet","train-00003-of-00035-64d5581b0d8c4437.parquet",]
     
     # download_config = datasets.DownloadConfig(force_download=True)
     # #https://huggingface.co/datasets/vietgpt/the_pile_openwebtext2/blob/main/data/
