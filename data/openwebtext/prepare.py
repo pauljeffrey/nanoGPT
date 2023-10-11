@@ -61,8 +61,8 @@ if __name__ == '__main__':
     for split, dset in tokenized.items():
         arr_len = np.sum(dset['len'], dtype=np.uint64)
         print("Array length:" ,arr_len)
-        filename = os.path.join(os.path.dirname(__file__), f'{split}.bin')
-        #filename = os.path.join('/kaggle/working/', f'{split}.bin')
+        #filename = os.path.join(os.path.dirname(__file__), f'{split}.bin')
+        filename = os.path.join(os.path.abspath('/kaggle/working/'), f'{split}.bin')
         dtype = np.uint16 # (can do since enc.max_token_value == 50256 is < 2**16)
         arr = np.memmap(filename, dtype=dtype, mode='w+', shape=(arr_len,))
         total_batches = 1024 if split == 'train' else 128
