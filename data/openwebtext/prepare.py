@@ -25,7 +25,7 @@ if __name__ == '__main__':
         "data/train-00032-of-00035-65723db2a29abae8.parquet","data/train-00033-of-00035-bcb2a36aebfb89f9.parquet",
                   "data/train-00034-of-00035-3244e25f0c60266d.parquet","data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
                   "data/train-00030-of-00035-7722c3ba07048ce8.parquet", "data/train-00027-of-00035-35cffad4db0bf6b9.parquet",
-                  "data/train-00026-of-00035-b0969ddc6407c018.parquet","data/train-00020-of-00035-62c504f2fccfd521.parquet","data/train-00003-of-00035-872e837e0ce2b7b8.parquet",]
+                  "data/train-00026-of-00035-b0969ddc6407c018.parquet","data/train-00003-of-00035-872e837e0ce2b7b8.parquet",]
     
     # "data/train-00001-of-00035-0ffa1b2c1533e462.parquet","data/train-00002-of-00035-8d4d29f0bb986f30.parquet",
     #               "data/train-00023-of-00035-1751103bdc6eb74c.parquet", "data/train-00031-of-00035-e8233b95e5b92059.parquet",
