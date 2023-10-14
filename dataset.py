@@ -14,7 +14,7 @@ class TextDataset(Dataset):
         self.arr_len = len(self.data)
         print("Arr length: ", self.arr_len)
         self.split = split_type
-        self.len = 1 + math.floor((self.arr_len - self.block_size) / self.window)
+        self.len = 1 + math.floor((self.arr_len - (self.block_size + 1)) / self.window)
         self.device = device
         
     def __getitem__(self, index):
