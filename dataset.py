@@ -27,14 +27,14 @@ class TextDataset(Dataset):
         if self.split == 'train':
             x = torch.from_numpy((self.data[i*self.window: (i*self.window)+ self.block_size]).astype(np.int64))
             y = torch.from_numpy((self.data[(i*self.window)+1: (i* self.window)+1+ self.block_size]).astype(np.int64))
-            print("train_sample:- ", "X shape: ", x.shape, 'Y shape: ', y.shape)
+            ##print("train_sample:- ", "X shape: ", x.shape, 'Y shape: ', y.shape)
 
         else:
             #i = random.choice(random.sample(range(len(self.data) - self.block_size), random.choice(range(self.len))))
             x = torch.from_numpy((self.data[i:i+self.block_size]).astype(np.int64))
     
             y = torch.from_numpy((self.data[i+1:i+1+self.block_size]).astype(np.int64))
-            print("test sample:- ", "X shape: ", x.shape, 'Y shape: ', y.shape)
+            #print("test sample:- ", "X shape: ", x.shape, 'Y shape: ', y.shape)
         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
         #x, y = x.pin_memory().to(self.device, non_blocking=True), y.pin_memory().to(self.device, non_blocking=True)
         
