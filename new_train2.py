@@ -95,6 +95,13 @@ device = accelerator.device
 
 
 data_dir = os.path.join('data', dataset)
+
+
+# Create output directory if it doesn't exist
+out_dir = os.path.join(root_dir, out_dir)
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
+
 # train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
 # val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
  
@@ -231,10 +238,6 @@ t0 = time.time()
 
 running_mfu = -1.0
 
-# Create output directory if it doesn't exist
-out_dir = os.path.join(root_dir, out_dir)
-if not os.path.exists(out_dir):
-    os.mkdir(out_dir)
 
 progress_bar = tqdm(range(max_iters))
 
