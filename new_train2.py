@@ -23,8 +23,8 @@ def count_parameters(model):
 # I/O
 root_dir = "/kaggle/working"
 out_dir = 'out'
-eval_interval = 2000
-log_interval = 256
+eval_interval = 4096
+log_interval = 512
 eval_iters = 500
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
@@ -39,7 +39,7 @@ wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
 
 # data
 dataset = 'openwebtext'
-gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
+gradient_accumulation_steps = 128 # used to simulate larger batch sizes
 train_batch_size = 1 # if gradient_accumulation_steps > 1, this is the micro-batch size
 eval_batch_size = train_batch_size * 4
 block_size = 256 #1024
