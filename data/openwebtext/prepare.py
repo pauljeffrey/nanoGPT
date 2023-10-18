@@ -39,8 +39,6 @@ if __name__ == '__main__':
         #ids = enc.encode_ordinary(example['text']) # encode_ordinary ignores any special tokens
         result = enc(example['text'] + enc.eos_token)
         result["input_ids"]
-        print(result["input_ids"][:20])
-        print(result["input_ids"][-1])
         #ids.append(enc.eot_token) # add the end of text token, e.g. 50256 for gpt2 bpe
         # note: I think eot should be prepended not appended... hmm. it's called "eot" though...
         out = {'ids': result["input_ids"], 'len': len(result["input_ids"])}
