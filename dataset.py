@@ -12,7 +12,7 @@ class TextDataset(Dataset):
         self.window = window
         self.block_size = block_size
         self.arr_len = len(self.data)
-        print("Arr length: ", self.arr_len)
+        #print("Arr length: ", self.arr_len)
         self.split = split_type
         self.len = 1 + math.floor((self.arr_len - (self.block_size + 1)) / self.window)
         self.device = device
