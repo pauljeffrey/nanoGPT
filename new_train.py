@@ -3,6 +3,8 @@ import time
 import math
 import pickle
 from contextlib import nullcontext
+from dataset import *
+
 import numpy as np
 from accelerate import Accelerator, DeepSpeedPlugin
 from tqdm import tqdm
@@ -19,13 +21,19 @@ def count_parameters(model):
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
-out_dir = 'out'
-eval_interval = 2000
-log_interval = 256
+
+out_dir = './out'
+train_data_path = None
+eval_data_path = None
+eval_interval = 4096
+log_interval = 512
 eval_iters = 500
+num_proc= 8
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
 init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
+window = 64
+epochs = 100
 
 # wandb logging
 wandb_log = False # disabled by default
@@ -34,16 +42,17 @@ wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
 
 # data
 dataset = 'openwebtext'
-gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
-batch_size = 1 # if gradient_accumulation_steps > 1, this is the micro-batch size
+gradient_accumulation_steps = 128 # used to simulate larger batch sizes
+train_batch_size = 64 # if gradient_accumulation_steps > 1, this is the micro-batch size
+eval_batch_size = train_batch_size * 4
 block_size = 256 #1024
 
 # model
 n_positions=2048
 rotary_dim = 64
-n_layer = 18 #16
-n_head = 20
-n_embd = 1280 #768
+n_layer = 28 #18 #16
+n_head = 24 #20
+n_embd = 1536 #1280 #768
 bos_token_id = 50256
 eos_token_id = 50256
 n_inner = None
@@ -52,13 +61,14 @@ layer_norm_epsilon = 1e-5
 use_cache=True
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
+vocab_size=None
+
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 600000 # total number of training iterations
+max_iters = 800000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
-grad_clip = 1.0 # clip gradients at this value, or disable if == 0.0
 # learning rate decay settings
 decay_lr = True # whether to decay the learning rate
 warmup_iters = 2000 # how many steps to warm up for
@@ -67,6 +77,8 @@ min_lr = 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchi
 device= "cuda"
 device_type = 'cuda' if 'cuda' in device else 'cpu' 
 scheduler = "cosine"
+zero_stage=3
+gradient_clipping = 1.0
 
 # system
 #device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
@@ -80,46 +92,23 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 
 
 # Create accelerator
-deepspeed_plugin = DeepSpeedPlugin(zero_stage=3, gradient_accumulation_steps=gradient_accumulation_steps, gradient_clipping=1.0)
+deepspeed_plugin = DeepSpeedPlugin(zero_stage=zero_stage, gradient_accumulation_steps=gradient_accumulation_steps, gradient_clipping=gradient_clipping)
 accelerator= Accelerator(mixed_precision='fp16', deepspeed_plugin=deepspeed_plugin)
-#AcceleratorState().deepspeed_plugin.deepspeed_config['train_micro_batch_size_per_gpu'] = batch_size
 accelerator.wait_for_everyone()
 device = accelerator.device
 
 
+# Create output directory if it doesn't exist
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
 
-data_dir = os.path.join('data', dataset)
-# train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
-# val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
-
-train_data = np.memmap("/kaggle/working/train.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'train.bin')
-val_data = np.memmap("/kaggle/working/val.bin", dtype=np.uint16, mode='r') #os.path.join(data_dir, 'val.bin')
-
-index = 0
-window = 64
-batch_slice = window * (batch_size - 1) + block_size 
 
 # Dataloader
-def get_batch(split, mode = "eval"):
-    if mode == 'train' and split == 'train':
-        data = train_data
-        global index
-        ix = range( index, batch_slice, window)
-        x = torch.stack([torch.from_numpy((data[i: i+ block_size]).astype(np.int64)) for i in ix])
-        y = torch.stack([torch.from_numpy((data[i+1: i+1+block_size]).astype(np.int64)) for i in ix])
-        index += batch_slice
-    else:
-        data = train_data if split == 'train' else val_data
-        ix = torch.randint(len(data) - block_size, (batch_size,))
-        x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
-    
-        y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
-    if device_type == 'cuda':
-        # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
-        x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
-    else:
-        x, y = x.to(device), y.to(device)
-    return x, y
+train_dataloader = get_loader(train_data_path,  train_batch_size,
+               window = window, block_size= block_size, split_type= 'train', device= accelerator.device, shuffle = True) 
+
+val_dataloader = get_loader(eval_data_path,  eval_batch_size, window = window, block_size= block_size, split_type= 'eval',
+               device= accelerator.device, shape = (block_size * eval_iters,), shuffle = False) 
 
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
@@ -128,7 +117,7 @@ best_val_loss = 1e9
 
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size, rotary_dim=rotary_dim,n_inner=n_inner,
-                  bias=bias, vocab_size=None, dropout=dropout, activation_function=activation_function, layer_norm_epsilon=layer_norm_epsilon,
+                  bias=bias, vocab_size=vocab_size, dropout=dropout, activation_function=activation_function, layer_norm_epsilon=layer_norm_epsilon,
                   use_cache=use_cache, bos_token_id=bos_token_id, eos_token_id=eos_token_id) # start with model_args from command line
 
 
@@ -136,13 +125,13 @@ if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
     # determine the vocab size we'll use for from-scratch training
-    print("defaulting to vocab_size of GPT-2 to 50304 (50257 rounded up for efficiency)")
+    print("defaulting to vocab_size of 50304 (50257 rounded up for efficiency)")
     model_args['vocab_size'] = 50304
     conf = GPTJConfig(**model_args)
     model = GPTJForCausalLM(conf)
     
     # Memory problems
-    model.to(device)
+    # model.to(device)
 
     print(f"Model created successfully. Model has {count_parameters(model) / 1e6} million parameters...")
     # optimizer
@@ -155,6 +144,7 @@ if init_from == 'scratch':
                                 name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
                                 num_training_steps= max_iters,
                             )
+    last_step = 0
     
 elif init_from == 'resume':
     print(f"Resuming training from {out_dir}")
@@ -196,12 +186,12 @@ elif init_from == 'resume':
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
-        iter_num = checkpoint['iter_num']
+        last_step = checkpoint['iter_num']
         best_val_loss = checkpoint['best_val_loss']
         
     else:
         print(f"Checkpoint path: '{ckpt_path}' does not exist...")
-
+        last_step = 0
 # crop down the model block size if desired, using model surgery
 # if block_size < model.config.block_size:
 #     model.crop_block_size(block_size)
@@ -216,22 +206,20 @@ if compile:
     
     
 # Prepare accelerator
-model, optimizer, lr_scheduler, train_data = accelerator.prepare(model, optimizer, lr_scheduler, train_data)
+model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
 
-checkpoint=None #free up memory
+checkpoint= None #free up memory
 
 
 @torch.no_grad()
 def estimate_loss():
     out = {}
     model.eval()
-    for split in ['train', 'val']:
-        losses = torch.zeros(eval_iters)
-        for k in range(eval_iters):
-            X, Y = get_batch(split)
-            output = model(input_ids=X, labels=Y)            
-            losses[k] = output.loss.item()
-        out[split] = losses.mean()
+    losses = []
+    for X, Y in val_dataloader:
+        output = model(input_ids=X, labels=Y)            
+        losses.append(output.loss.item())
+    out["eval"] = torch.mean(torch.tensor(losses))
     model.train()
     return out
 
@@ -242,75 +230,83 @@ if wandb_log:
     import wandb
     wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
-X, Y = get_batch('train', 'train')
+
 t0 = time.time()
 
 
 running_mfu = -1.0
 
+
 progress_bar = tqdm(range(max_iters))
-while True:
-    # evaluate the loss on train/val sets and write checkpoints
-    if iter_num % eval_interval == 0:
-        losses = estimate_loss()
-        print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
-        if wandb_log:
-            wandb.log({
-                "iter": iter_num,
-                "train/loss": losses['train'],
-                "val/loss": losses['val'],
-                "lr": optimizer.lr,
-                "mfu": running_mfu*100, # convert to percentage
-            })
-            
-        if losses['val'] < best_val_loss or always_save_checkpoint:
-            best_val_loss = losses['val']
-            if iter_num > 0:
-                checkpoint = {
-                    'model': accelerator.unwrap_model(model).state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'lr_scheduler': lr_scheduler.state_dict(),
-                    'model_args': model_args,
-                    'iter_num': iter_num,
-                    'best_val_loss': best_val_loss,
-                    'config': config,
-                }
-                print(f"saving checkpoint to {out_dir}")
-                torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+
+for epoch in range(epochs):
+    train_losses = 0
+    for iter_num , (X , Y) in enumerate(train_dataloader):
+        if iter_num < last_step:
+            continue
+        train_loss = 0
+        # evaluate the loss on train/val sets and write checkpoints
+        if iter_num % eval_interval == 0:
+            eval_loss = estimate_loss()
+            if train_losses > 0:
+                print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
+            if wandb_log:
+                wandb.log({
+                    "iter": iter_num,
+                    "train/loss": train_losses/(iter_num+1),
+                    "val/loss": eval_loss['eval'],
+                    "lr": optimizer.lr,
+                    "mfu": running_mfu*100, # convert to percentage
+                })
                 
-    if iter_num == 0 and eval_only:
-        break
+            if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
+                best_val_loss = eval_loss['eval']
+                if iter_num > 0:
+                    checkpoint = {
+                        'model': accelerator.unwrap_model(model).state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'lr_scheduler': lr_scheduler.state_dict(),
+                        'model_args': model_args,
+                        'iter_num': iter_num,
+                        'best_val_loss': best_val_loss,
+                        'config': config,
+                    }
+                    
+                    print(f"saving checkpoint to {out_dir}")
+                    
+                    torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                    
+        if iter_num == 0 and eval_only:
+            break
 
-    train_loss = 0
-    # forward backward update, with optional gradient accumulation to simulate larger batch size
-    for micro_step in range(gradient_accumulation_steps):
-        outputs = model(input_ids=X, labels=Y)
-        train_loss += (outputs.loss.item() / gradient_accumulation_steps)
-        loss = outputs.loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
-        # immediately async prefetch next batch while model is doing the forward pass on the GPU
-        X, Y = get_batch('train')
-        accelerator.backward(loss)
         
-    # clip the gradient
-    optimizer.step()
-    lr_scheduler.step()
-    # flush the gradients as soon as we can, no need for this memory anymore
-    optimizer.zero_grad()
-    progress_bar.update(1)
-
-    # timing and logging
-    t1 = time.time()
-    dt = t1 - t0
-    t0 = t1
     
-    if iter_num % log_interval == 0:
-        print(f"iter {iter_num}: loss {train_loss:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
-        
-    iter_num += 1
+        outputs = model(input_ids=X, labels=Y)
+        train_loss = outputs.loss.item() 
+        loss = outputs.loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
+        accelerator.backward(loss)
+            
+        if iter_num % gradient_accumulation_steps == 0:
+            # clip the gradient
+            optimizer.step()
+            lr_scheduler.step()
+            # flush the gradients as soon as we can, no need for this memory anymore
+            optimizer.zero_grad()
+            progress_bar.update(1)
 
-    # termination conditions
-    if iter_num > max_iters:
-        break
+        # timing and logging
+        t1 = time.time()
+        dt = t1 - t0
+        t0 = t1
+        
+        if iter_num % log_interval == 0:
+            print(f"iter {iter_num}: loss {train_loss:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+            
+        train_losses += train_loss
+
+        # termination conditions
+        if iter_num > max_iters:
+            break
 
 
 

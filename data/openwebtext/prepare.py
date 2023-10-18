@@ -5,36 +5,25 @@ import os
 from tqdm import tqdm
 import numpy as np
 import tiktoken
+import argparse
 from datasets import load_dataset # huggingface datasets
 import datasets
 
-# number of workers in .map() call
-# good number to use is ~order number of cpu cores // 2
-num_proc = 8
-
-# number of workers in load_dataset() call
-# best number might be different from num_proc above as it also depends on NW speed.
-# it is better than 1 usually though
-num_proc_load_dataset = num_proc
 
 if __name__ == '__main__':
-    # takes 54GB in huggingface .cache dir, about 8M documents (8,013,769)
-    #dataset = load_dataset("openwebtext", num_proc=num_proc_load_dataset)
-    # Don't use 0, 9, 28| 1,2,23,31,17,15,16, 18
-    data_files = [
-        "data/train-00032-of-00035-65723db2a29abae8.parquet","data/train-00033-of-00035-bcb2a36aebfb89f9.parquet",
-                  "data/train-00034-of-00035-3244e25f0c60266d.parquet","data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
-                  "data/train-00030-of-00035-7722c3ba07048ce8.parquet", "data/train-00027-of-00035-35cffad4db0bf6b9.parquet",
-                  "data/train-00026-of-00035-b0969ddc6407c018.parquet","data/train-00003-of-00035-872e837e0ce2b7b8.parquet",]
+    parser = argparse.ArgumentParser(description='PErsonalized Prompt Learning for Explainable Recommendation (PEPLER)')
+    parser.add_argument('--data_path', type=str, default=None,
+                        help='path to store the processed data downloaded from huggingface')
+    parser.add_argument('--num_proc', type=int, default=8,
+                        help='number of processes to use to prepare dataset')
+    parser.add_argument('--dataset', type=str, default="vietgpt/the_pile_openwebtext2",
+                        help='specify the dataset you want to use from huggingface datasets')
     
-    # "data/train-00001-of-00035-0ffa1b2c1533e462.parquet","data/train-00002-of-00035-8d4d29f0bb986f30.parquet",
-    #               "data/train-00023-of-00035-1751103bdc6eb74c.parquet", "data/train-00031-of-00035-e8233b95e5b92059.parquet",
-    #               "data/train-00017-of-00035-e3e493e9d916d4f5.parquet", "data/train-00015-of-00035-b51782f9289bc156.parquet",
-    #               "data/train-00016-of-00035-5114eb1a53695860.parquet","data/train-00018-of-00035-aff94553959b76bb.parquet",
-    #               "data/train-00019-of-00035-4a50511881e93615.parquet",]
-    # download_config = datasets.DownloadConfig(force_download=True)
-    # #https://huggingface.co/datasets/vietgpt/the_pile_openwebtext2/blob/main/data/
-    dataset = load_dataset("vietgpt/the_pile_openwebtext2", num_proc=num_proc_load_dataset, data_files= data_files,ignore_verifications=True)#, cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset") #verification_mode = None,cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset",  download_config = download_config
+    args = parser.parse_args()
+
+    num_proc_load_dataset = args.num_proc
+    
+    dataset = load_dataset(args.dataset, num_proc=num_proc_load_dataset, data_files= ["data/train-00032-of-00035-65723db2a29abae8.parquet"])#, data_files= data_files,ignore_verifications=True)#, cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset") #verification_mode = None,cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset",  download_config = download_config
     # owt by default only contains the 'train' split, so create a test split
     print(dataset)
     split_dataset = dataset["train"].train_test_split(test_size=0.0005, seed=2357, shuffle=True)
@@ -55,17 +44,24 @@ if __name__ == '__main__':
         process,
         remove_columns=['title', 'text', 'reddit_scores'],
         desc="tokenizing the splits",
-        num_proc=num_proc,
+        num_proc=args.num_proc,
     )
 
     # concatenate all the ids in each dataset into one large file we can use for training
     for split, dset in tokenized.items():
         arr_len = np.sum(dset['len'], dtype=np.uint64)
-        print("Array length:" ,arr_len)
+        #print("Array length:" ,arr_len)
         #filename = os.path.join(os.path.dirname(__file__), f'{split}.bin')
-        filename = os.path.join(os.path.abspath('/kaggle/working/'), f'{split}.bin')
+        
         dtype = np.uint16 # (can do since enc.max_token_value == 50256 is < 2**16)
+        
+        if args.data_path is None:
+            filename = filename = os.path.join(os.path.dirname(__file__), f'{split}.bin') # Use current working directory as storage location.
+        else:
+            filename = os.path.join(args.data_path, f'{split}.bin')
+            
         arr = np.memmap(filename, dtype=dtype, mode='w+', shape=(arr_len,))
+        
         total_batches = 1024 if split == 'train' else 128
 
         idx = 0
