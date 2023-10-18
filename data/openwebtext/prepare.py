@@ -34,7 +34,7 @@ if __name__ == '__main__':
     enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b")
     enc.push_to_hub("my-awesome-model", private=True)
     def process(example):
-        ids = enc.encode_ordinary(example['text']) # encode_ordinary ignores any special tokens
+        ids = enc(example['text']) # encode_ordinary ignores any special tokens
         ids.append(enc.eot_token) # add the end of text token, e.g. 50256 for gpt2 bpe
         # note: I think eot should be prepended not appended... hmm. it's called "eot" though...
         out = {'ids': ids, 'len': len(ids)}
