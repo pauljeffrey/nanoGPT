@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
     #enc = tiktoken.get_encoding("gpt2")
     enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b", use_fast=True)
-    enc.push_to_hub(args.repo_name)
+    enc.push_to_hub(args.repo_name, private=True)
     
     if enc.pad_token is None:
         enc.pad_token = enc.eos_token

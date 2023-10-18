@@ -243,73 +243,73 @@ running_mfu = -1.0
 progress_bar = tqdm(range(max_iters))
 
 for epoch in range(epochs):
-    # train_losses = 0
-    # for iter_num , (X , Y) in enumerate(train_dataloader):
-    #     if iter_num < last_step:
-    #         continue
-    #     train_loss = 0
-    #     # evaluate the loss on train/val sets and write checkpoints
-    #     if iter_num % eval_interval == 0:
-    #         eval_loss = estimate_loss()
-    #         if train_losses > 0:
-    #             print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
-    #         if wandb_log:
-    #             wandb.log({
-    #                 "iter": iter_num,
-    #                 "train/loss": train_losses/(iter_num+1),
-    #                 "val/loss": eval_loss['eval'],
-    #                 "lr": optimizer.lr,
-    #                 "mfu": running_mfu*100, # convert to percentage
-    #             })
+    train_losses = 0
+    for iter_num , (X , Y) in enumerate(train_dataloader):
+        if iter_num < last_step:
+            continue
+        train_loss = 0
+        # evaluate the loss on train/val sets and write checkpoints
+        if iter_num % eval_interval == 0:
+            eval_loss = estimate_loss()
+            if train_losses > 0:
+                print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
+            if wandb_log:
+                wandb.log({
+                    "iter": iter_num,
+                    "train/loss": train_losses/(iter_num+1),
+                    "val/loss": eval_loss['eval'],
+                    "lr": optimizer.lr,
+                    "mfu": running_mfu*100, # convert to percentage
+                })
                 
-    #         if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
-    #             best_val_loss = eval_loss['eval']
-    #             if iter_num > 0:
-    #                 checkpoint = {
-    #                     'model': accelerator.unwrap_model(model).state_dict(),
-    #                     'optimizer': optimizer.state_dict(),
-    #                     'lr_scheduler': lr_scheduler.state_dict(),
-    #                     'model_args': model_args,
-    #                     'iter_num': iter_num,
-    #                     'best_val_loss': best_val_loss,
-    #                     'config': config,
-    #                 }
+            if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
+                best_val_loss = eval_loss['eval']
+                if iter_num > 0:
+                    checkpoint = {
+                        'model': accelerator.unwrap_model(model).state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'lr_scheduler': lr_scheduler.state_dict(),
+                        'model_args': model_args,
+                        'iter_num': iter_num,
+                        'best_val_loss': best_val_loss,
+                        'config': config,
+                    }
                     
-    #                 print(f"saving checkpoint to {out_dir}")
+                    print(f"saving checkpoint to {out_dir}")
                     
-    #                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                    torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
-    #     if iter_num == 0 and eval_only:
-    #         break
+        if iter_num == 0 and eval_only:
+            break
 
         
     
-    #     outputs = model(input_ids=X, labels=Y)
-    #     train_loss = outputs.loss.item() 
-    #     loss = outputs.loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
-    #     accelerator.backward(loss)
+        outputs = model(input_ids=X, labels=Y)
+        train_loss = outputs.loss.item() 
+        loss = outputs.loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
+        accelerator.backward(loss)
             
-    #     if iter_num % gradient_accumulation_steps == 0:
-    #         # clip the gradient
-    #         optimizer.step()
-    #         lr_scheduler.step()
-    #         # flush the gradients as soon as we can, no need for this memory anymore
-    #         optimizer.zero_grad()
-    #         progress_bar.update(1)
+        if iter_num % gradient_accumulation_steps == 0:
+            # clip the gradient
+            optimizer.step()
+            lr_scheduler.step()
+            # flush the gradients as soon as we can, no need for this memory anymore
+            optimizer.zero_grad()
+            progress_bar.update(1)
 
-    #     # timing and logging
-    #     t1 = time.time()
-    #     dt = t1 - t0
-    #     t0 = t1
+        # timing and logging
+        t1 = time.time()
+        dt = t1 - t0
+        t0 = t1
         
-    #     if iter_num % log_interval == 0:
-    #         print(f"iter {iter_num}: loss {train_loss:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+        if iter_num % log_interval == 0:
+            print(f"iter {iter_num}: loss {train_loss:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
             
-    #     train_losses += train_loss
+        train_losses += train_loss
 
-    #     # termination conditions
-    #     if iter_num > max_iters:
-    #         break
+        # termination conditions
+        if iter_num > max_iters:
+            break
 
     accelerator.print(f"Epoch {epoch} finished.")
     accelerator.print(f"Pushing to HF hub...")
