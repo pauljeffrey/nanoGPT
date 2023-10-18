@@ -24,8 +24,8 @@ def count_parameters(model):
 
 out_dir = './out'
 repo_name = "gpt-j"
-train_data_path = "/content/nanoGPT/data/openwebtext/train.bin" #"./train.bin"
-eval_data_path = "/content/nanoGPT/data/openwebtext/val.bin" #"./val.bin"
+train_data_path = "./train.bin"
+eval_data_path = "./val.bin"
 eval_interval = 4096
 log_interval = 512
 eval_iters = 500
@@ -92,7 +92,7 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # -----------------------------------------------------------------------------
 
 
-print("Train_path: ",train_data_path)
+#print("Train_path: ",train_data_path)
 
 # Create accelerator
 deepspeed_plugin = DeepSpeedPlugin(zero_stage=zero_stage, gradient_accumulation_steps=gradient_accumulation_steps, gradient_clipping=gradient_clipping)
