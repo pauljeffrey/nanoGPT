@@ -33,17 +33,17 @@ if __name__ == '__main__':
 
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
     #enc = tiktoken.get_encoding("gpt2")
-    enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b")
+    enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b", use_fast=True)
     enc.push_to_hub("my-awesome-model", private=True)
     def process(example):
         #ids = enc.encode_ordinary(example['text']) # encode_ordinary ignores any special tokens
-        result = enc(example['text'])
-        result["input_ids"].append(enc.eos_token)
-        ids = result["input_ids"]
-        print(ids[:20], ids[-1])
+        result = enc(example['text'] + enc.eos_token)
+        result["input_ids"]
+        print(result["input_ids"][:20])
+        print(result["input_ids"][-1])
         #ids.append(enc.eot_token) # add the end of text token, e.g. 50256 for gpt2 bpe
         # note: I think eot should be prepended not appended... hmm. it's called "eot" though...
-        out = {'ids': ids, 'len': len(ids)}
+        out = {'ids': result["input_ids"], 'len': len(result["input_ids"])}
         return out
 
     # tokenize the dataset
