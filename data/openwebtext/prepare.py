@@ -18,7 +18,9 @@ if __name__ == '__main__':
                         help='number of processes to use to prepare dataset')
     parser.add_argument('--dataset', type=str, default="vietgpt/the_pile_openwebtext2",
                         help='specify the dataset you want to use from huggingface datasets')
-    
+    parser.add_argument('--repo_name', type=str, default="gpt-j",
+                        help='specify the hugging face repository to push tokenizer.')
+     
     args = parser.parse_args()
 
     num_proc_load_dataset = args.num_proc
@@ -34,7 +36,11 @@ if __name__ == '__main__':
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
     #enc = tiktoken.get_encoding("gpt2")
     enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b", use_fast=True)
-    enc.push_to_hub("my-awesome-model", private=True)
+    enc.push_to_hub(args.repo_name, private=True)
+    
+    if enc.pad_token is None:
+        enc.pad_token = enc.eos_token
+        
     def process(example):
         #ids = enc.encode_ordinary(example['text']) # encode_ordinary ignores any special tokens
         result = enc(example['text'] + enc.eos_token)
@@ -61,7 +67,7 @@ if __name__ == '__main__':
         dtype = np.uint16 # (can do since enc.max_token_value == 50256 is < 2**16)
         
         if args.data_path is None:
-            filename = filename = os.path.join(os.path.dirname(__file__), f'{split}.bin') # Use current working directory as storage location.
+            filename = os.path.join(os.path.dirname(__file__), f'{split}.bin') # Use current working directory as storage location.
         else:
             filename = os.path.join(args.data_path, f'{split}.bin')
             
@@ -79,7 +85,7 @@ if __name__ == '__main__':
             idx += len(arr_batch)
         arr.flush()
         
-    enc.push_to_hub("my-awesome-model", private=True)
+
 
     # train.bin is ~17GB, val.bin ~8.5MB
     # train has ~9B tokens (9,035,582,198)

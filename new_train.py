@@ -23,8 +23,9 @@ def count_parameters(model):
 # I/O
 
 out_dir = './out'
-train_data_path = None
-eval_data_path = None
+repo_name = "gpt-j"
+train_data_path = os.path.join(os.path.dirname(__file__), 'train.bin') #"./train.bin"
+eval_data_path = os.path.join(os.path.dirname(__file__), 'val.bin') #"./val.bin"
 eval_interval = 4096
 log_interval = 512
 eval_iters = 500
@@ -50,7 +51,7 @@ block_size = 256 #1024
 # model
 n_positions=2048
 rotary_dim = 64
-n_layer = 28 #18 #16
+n_layer = 2 #28 #18 #16
 n_head = 24 #20
 n_embd = 1536 #1280 #768
 bos_token_id = 50256
@@ -61,7 +62,7 @@ layer_norm_epsilon = 1e-5
 use_cache=True
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
-vocab_size=None
+vocab_size=50400
 
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
@@ -125,8 +126,8 @@ if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
     # determine the vocab size we'll use for from-scratch training
-    print("defaulting to vocab_size of 50304 (50257 rounded up for efficiency)")
-    model_args['vocab_size'] = 50304
+    print("defaulting to vocab_size of 50400 (50257 rounded up for efficiency)")
+
     conf = GPTJConfig(**model_args)
     model = GPTJForCausalLM(conf)
     
@@ -240,73 +241,73 @@ running_mfu = -1.0
 progress_bar = tqdm(range(max_iters))
 
 for epoch in range(epochs):
-    train_losses = 0
-    for iter_num , (X , Y) in enumerate(train_dataloader):
-        if iter_num < last_step:
-            continue
-        train_loss = 0
-        # evaluate the loss on train/val sets and write checkpoints
-        if iter_num % eval_interval == 0:
-            eval_loss = estimate_loss()
-            if train_losses > 0:
-                print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
-            if wandb_log:
-                wandb.log({
-                    "iter": iter_num,
-                    "train/loss": train_losses/(iter_num+1),
-                    "val/loss": eval_loss['eval'],
-                    "lr": optimizer.lr,
-                    "mfu": running_mfu*100, # convert to percentage
-                })
+    # train_losses = 0
+    # for iter_num , (X , Y) in enumerate(train_dataloader):
+    #     if iter_num < last_step:
+    #         continue
+    #     train_loss = 0
+    #     # evaluate the loss on train/val sets and write checkpoints
+    #     if iter_num % eval_interval == 0:
+    #         eval_loss = estimate_loss()
+    #         if train_losses > 0:
+    #             print(f"step {iter_num}: train loss {train_losses/(iter_num+1):.4f}, val loss {eval_loss['eval']:.4f}")
+    #         if wandb_log:
+    #             wandb.log({
+    #                 "iter": iter_num,
+    #                 "train/loss": train_losses/(iter_num+1),
+    #                 "val/loss": eval_loss['eval'],
+    #                 "lr": optimizer.lr,
+    #                 "mfu": running_mfu*100, # convert to percentage
+    #             })
                 
-            if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
-                best_val_loss = eval_loss['eval']
-                if iter_num > 0:
-                    checkpoint = {
-                        'model': accelerator.unwrap_model(model).state_dict(),
-                        'optimizer': optimizer.state_dict(),
-                        'lr_scheduler': lr_scheduler.state_dict(),
-                        'model_args': model_args,
-                        'iter_num': iter_num,
-                        'best_val_loss': best_val_loss,
-                        'config': config,
-                    }
+    #         if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
+    #             best_val_loss = eval_loss['eval']
+    #             if iter_num > 0:
+    #                 checkpoint = {
+    #                     'model': accelerator.unwrap_model(model).state_dict(),
+    #                     'optimizer': optimizer.state_dict(),
+    #                     'lr_scheduler': lr_scheduler.state_dict(),
+    #                     'model_args': model_args,
+    #                     'iter_num': iter_num,
+    #                     'best_val_loss': best_val_loss,
+    #                     'config': config,
+    #                 }
                     
-                    print(f"saving checkpoint to {out_dir}")
+    #                 print(f"saving checkpoint to {out_dir}")
                     
-                    torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+    #                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
-        if iter_num == 0 and eval_only:
-            break
+    #     if iter_num == 0 and eval_only:
+    #         break
 
         
     
-        outputs = model(input_ids=X, labels=Y)
-        train_loss = outputs.loss.item() 
-        loss = outputs.loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
-        accelerator.backward(loss)
+    #     outputs = model(input_ids=X, labels=Y)
+    #     train_loss = outputs.loss.item() 
+    #     loss = outputs.loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
+    #     accelerator.backward(loss)
             
-        if iter_num % gradient_accumulation_steps == 0:
-            # clip the gradient
-            optimizer.step()
-            lr_scheduler.step()
-            # flush the gradients as soon as we can, no need for this memory anymore
-            optimizer.zero_grad()
-            progress_bar.update(1)
+    #     if iter_num % gradient_accumulation_steps == 0:
+    #         # clip the gradient
+    #         optimizer.step()
+    #         lr_scheduler.step()
+    #         # flush the gradients as soon as we can, no need for this memory anymore
+    #         optimizer.zero_grad()
+    #         progress_bar.update(1)
 
-        # timing and logging
-        t1 = time.time()
-        dt = t1 - t0
-        t0 = t1
+    #     # timing and logging
+    #     t1 = time.time()
+    #     dt = t1 - t0
+    #     t0 = t1
         
-        if iter_num % log_interval == 0:
-            print(f"iter {iter_num}: loss {train_loss:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+    #     if iter_num % log_interval == 0:
+    #         print(f"iter {iter_num}: loss {train_loss:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
             
-        train_losses += train_loss
+    #     train_losses += train_loss
 
-        # termination conditions
-        if iter_num > max_iters:
-            break
+    #     # termination conditions
+    #     if iter_num > max_iters:
+    #         break
 
     accelerator.print(f"Epoch {epoch} finished.")
     accelerator.print(f"Pushing to HF hub...")
@@ -314,7 +315,7 @@ for epoch in range(epochs):
     unwrapped_model = accelerator.unwrap_model(model)
     try:
         if accelerator.is_main_process:
-            unwrapped_model.push_to_hub("gpt-j", private=True)
+            unwrapped_model.push_to_hub(repo_name, private=True)
 
     except Exception as e:
         accelerator.print(e)
