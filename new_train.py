@@ -24,8 +24,8 @@ def count_parameters(model):
 
 out_dir = './out'
 repo_name = "gpt-j"
-train_data_path = os.path.join(os.path.dirname(__file__), 'train.bin') #"./train.bin"
-eval_data_path = os.path.join(os.path.dirname(__file__), 'val.bin') #"./val.bin"
+train_data_path = "/content/nanoGPT/data/openwebtext/train.bin" #"./train.bin"
+eval_data_path = "/content/nanoGPT/data/openwebtext/val.bin" #"./val.bin"
 eval_interval = 4096
 log_interval = 512
 eval_iters = 500
