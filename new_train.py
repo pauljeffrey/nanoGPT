@@ -45,7 +45,7 @@ wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
 dataset = 'openwebtext'
 gradient_accumulation_steps = 128 # used to simulate larger batch sizes
 train_batch_size = 64 # if gradient_accumulation_steps > 1, this is the micro-batch size
-eval_batch_size = train_batch_size * 4
+eval_batch_size = train_batch_size * 2
 block_size = 256 #1024
 
 # model
@@ -53,7 +53,7 @@ n_positions=2048
 rotary_dim = 64
 n_layer = 2 #28 #18 #16
 n_head = 24 #20
-n_embd = 1536 #1280 #768
+n_embd = 240 #1536 #1280 #768
 bos_token_id = 50256
 eos_token_id = 50256
 n_inner = None
