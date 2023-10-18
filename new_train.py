@@ -65,7 +65,7 @@ vocab_size=None
 
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 800000 # total number of training iterations
+max_iters = 2000000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -308,6 +308,17 @@ for epoch in range(epochs):
         if iter_num > max_iters:
             break
 
+    accelerator.print(f"Epoch {epoch} finished.")
+    accelerator.print(f"Pushing to HF hub...")
+    accelerator.wait_for_everyone()
+    unwrapped_model = accelerator.unwrap_model(model)
+    try:
+        if accelerator.is_main_process:
+            unwrapped_model.push_to_hub("gpt-j" + f"-epoch_{epoch}", private=True)
+
+    except Exception as e:
+        accelerator.print(e)
+        accelerator.print(f"Failed to push to hub")
 
 
 

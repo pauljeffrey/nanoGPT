@@ -32,6 +32,7 @@ if __name__ == '__main__':
 
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
     enc = tiktoken.get_encoding("gpt2")
+    enc.push_to_hub("my-awesome-model", private=True)
     def process(example):
         ids = enc.encode_ordinary(example['text']) # encode_ordinary ignores any special tokens
         ids.append(enc.eot_token) # add the end of text token, e.g. 50256 for gpt2 bpe
@@ -73,6 +74,8 @@ if __name__ == '__main__':
             arr[idx : idx + len(arr_batch)] = arr_batch
             idx += len(arr_batch)
         arr.flush()
+        
+    enc.push_to_hub("my-awesome-model", private=True)
 
     # train.bin is ~17GB, val.bin ~8.5MB
     # train has ~9B tokens (9,035,582,198)
