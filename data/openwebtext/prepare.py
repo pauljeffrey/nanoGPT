@@ -8,7 +8,7 @@ import tiktoken
 import argparse
 from datasets import load_dataset # huggingface datasets
 import datasets
-
+from transformers import AutoTokenizer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PErsonalized Prompt Learning for Explainable Recommendation (PEPLER)')
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
-    enc = tiktoken.get_encoding("gpt2")
+    enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b")
     enc.push_to_hub("my-awesome-model", private=True)
     def process(example):
         ids = enc.encode_ordinary(example['text']) # encode_ordinary ignores any special tokens
