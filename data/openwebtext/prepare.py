@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     num_proc_load_dataset = args.num_proc
     
-    dataset = load_dataset(args.dataset, num_proc=num_proc_load_dataset, data_files= ["data/train-00032-of-00035-65723db2a29abae8.parquet"])#, data_files= data_files,ignore_verifications=True)#, cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset") #verification_mode = None,cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset",  download_config = download_config
+    dataset = load_dataset(args.dataset, num_proc=num_proc_load_dataset, data_files= ["data/train-00032-of-00035-65723db2a29abae8.parquet"], ignore_verifications=True)#, data_files= data_files,ignore_verifications=True)#, cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset") #verification_mode = None,cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset",  download_config = download_config
     # owt by default only contains the 'train' split, so create a test split
     print(dataset)
     split_dataset = dataset["train"].train_test_split(test_size=0.0005, seed=2357, shuffle=True)

@@ -314,7 +314,7 @@ for epoch in range(epochs):
     unwrapped_model = accelerator.unwrap_model(model)
     try:
         if accelerator.is_main_process:
-            unwrapped_model.push_to_hub("gpt-j" + f"-epoch_{epoch}", private=True)
+            unwrapped_model.push_to_hub("gpt-j", private=True)
 
     except Exception as e:
         accelerator.print(e)
