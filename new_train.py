@@ -51,7 +51,7 @@ block_size = 256 #1024
 # model
 n_positions=2048
 rotary_dim = 64
-n_layer = 28 
+n_layer = 24 #28
 n_head = 24 
 n_embd = 1536 
 bos_token_id = 50256
