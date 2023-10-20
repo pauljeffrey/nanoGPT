@@ -135,7 +135,7 @@ if init_from == 'scratch':
     model = GPTJForCausalLM(conf)
     
     # Memory problems
-    # model.to(device)
+    model.to(device)
 
     print(f"Model created successfully. Model has {count_parameters(model) / 1e6} million parameters...")
     # optimizer
@@ -173,7 +173,7 @@ elif init_from == 'resume':
         #         print(K)
         #         state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
         model.load_state_dict(checkpoint['model'])
-        
+        model.to(device)
         print(f"Model checkpoint loaded successfully. Model has {count_parameters(model)/1e6} million parameters...")
         
         # optimizer
