@@ -45,7 +45,7 @@ wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
 # data
 dataset = 'openwebtext'
 gradient_accumulation_steps = 32 #128 # used to simulate larger batch sizes
-train_batch_size = 64 # if gradient_accumulation_steps > 1, this is the micro-batch size
+train_batch_size = 2 # if gradient_accumulation_steps > 1, this is the micro-batch size
 eval_batch_size = train_batch_size * 2
 block_size = 256 #1024
 
@@ -107,6 +107,7 @@ if not os.path.exists(out_dir):
     os.mkdir(out_dir)
 
 
+print(train_batch_size, eval_batch_size)
 # Dataloader
 train_dataloader = get_loader(train_data_path,  train_batch_size,
                window = window, block_size= block_size, split_type= 'train', device= accelerator.device, shuffle = True) 
