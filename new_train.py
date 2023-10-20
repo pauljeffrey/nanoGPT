@@ -43,7 +43,7 @@ wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
 
 # data
 dataset = 'openwebtext'
-gradient_accumulation_steps = 128 # used to simulate larger batch sizes
+gradient_accumulation_steps = 32 #128 # used to simulate larger batch sizes
 train_batch_size = 64 # if gradient_accumulation_steps > 1, this is the micro-batch size
 eval_batch_size = train_batch_size * 2
 block_size = 256 #1024
@@ -278,6 +278,8 @@ for epoch in range(epochs):
                     print(f"saving checkpoint to {out_dir}")
                     
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                    
+            if iter_num % 
                     
         if iter_num == 0 and eval_only:
             break
