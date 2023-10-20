@@ -31,6 +31,7 @@ log_interval = 512
 eval_iters = 500
 num_proc= 8
 eval_only = False # if True, script exits right after the first eval
+push_to_hub_every=32
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
 init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
 window = 64
@@ -279,7 +280,18 @@ for epoch in range(epochs):
                     
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
-            if iter_num % 
+            if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0:
+                accelerator.print(f"Epoch {epoch} finished.")
+                accelerator.print(f"Pushing to HF hub...")
+                accelerator.wait_for_everyone()
+                unwrapped_model = accelerator.unwrap_model(model)
+                try:
+                    if accelerator.is_main_process:
+                        unwrapped_model.push_to_hub(repo_name, private=True)
+
+                except Exception as e:
+                    accelerator.print(e)
+                    accelerator.print(f"Failed to push to hub")
                     
         if iter_num == 0 and eval_only:
             break
