@@ -135,7 +135,7 @@ if init_from == 'scratch':
     model = GPTJForCausalLM(conf)
     
     # Memory problems
-    model.to(device)
+    #model.to(device)
 
     print(f"Model created successfully. Model has {count_parameters(model) / 1e6} million parameters...")
     # optimizer
@@ -148,6 +148,9 @@ if init_from == 'scratch':
                                 name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
                                 num_training_steps= max_iters,
                             )
+    #Prepare accelerator
+    model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
+
     last_step = 0
     
 elif init_from == 'resume':
@@ -190,6 +193,9 @@ elif init_from == 'resume':
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
+        #Prepare accelerator
+        model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
+
         last_step = checkpoint['iter_num']
         best_val_loss = checkpoint['best_val_loss']
         
@@ -210,7 +216,7 @@ if compile:
     
     
 # Prepare accelerator
-model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
+#model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
 
 checkpoint= None #free up memory
 
