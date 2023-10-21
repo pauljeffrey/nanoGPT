@@ -288,13 +288,12 @@ for epoch in range(epochs):
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
             if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0:
-                accelerator.print(f"Epoch {epoch} finished.")
                 accelerator.print(f"Pushing to HF hub...")
                 accelerator.wait_for_everyone()
                 unwrapped_model = accelerator.unwrap_model(model)
                 try:
                     if accelerator.is_main_process:
-                        unwrapped_model.push_to_hub(repo_name, private=True)
+                        unwrapped_model.push_to_hub(repo_name)
 
                 except Exception as e:
                     accelerator.print(e)
