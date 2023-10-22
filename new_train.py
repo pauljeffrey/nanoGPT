@@ -287,7 +287,7 @@ for epoch in range(epochs):
                     
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
-            if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0:
+            if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0 and iter_num != 0:
                 accelerator.print(f"Pushing to HF hub...")
                 accelerator.wait_for_everyone()
                 unwrapped_model = accelerator.unwrap_model(model)
