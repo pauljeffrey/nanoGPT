@@ -166,7 +166,7 @@ elif init_from == 'resume':
         for k in ['n_layer', 'n_head', 'n_embd', 'block_size', 'bias', 'vocab_size']:
             model_args[k] = checkpoint_model_args[k]
         # create the model
-        conf = GPTConfig(**model_args)
+        conf = GPTJConfig(**model_args)
         model = GPTJForCausalLM(conf)
         #state_dict = checkpoint['model']
         # fix the keys of the state dictionary :(
