@@ -79,7 +79,7 @@ min_lr = 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchi
 device= "cuda"
 device_type = 'cuda' if 'cuda' in device else 'cpu' 
 scheduler = "cosine"
-zero_stage=3
+zero_stage=2
 gradient_clipping = 1.0
 
 # system
@@ -287,17 +287,17 @@ for epoch in range(epochs):
                     
                     torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
-            # if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0 and iter_num != 0:
-            #     accelerator.print(f"Pushing to HF hub...")
-            #     accelerator.wait_for_everyone()
-            #     unwrapped_model = accelerator.unwrap_model(model)
-            #     try:
-            #         if accelerator.is_main_process:
-            #             unwrapped_model.push_to_hub(repo_name)
+            if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0 and iter_num != 0:
+                accelerator.print(f"Pushing to HF hub...")
+                accelerator.wait_for_everyone()
+                unwrapped_model = accelerator.unwrap_model(model)
+                try:
+                    if accelerator.is_main_process:
+                        unwrapped_model.push_to_hub(repo_name)
 
-            #     except Exception as e:
-            #         accelerator.print(e)
-            #         accelerator.print(f"Failed to push to hub")
+                except Exception as e:
+                    accelerator.print(e)
+                    accelerator.print(f"Failed to push to hub")
                     
         if iter_num == 0 and eval_only:
             break
@@ -331,17 +331,17 @@ for epoch in range(epochs):
         if iter_num > max_iters:
             break
 
-    # accelerator.print(f"Epoch {epoch} finished.")
-    # accelerator.print(f"Pushing to HF hub...")
-    # accelerator.wait_for_everyone()
-    # unwrapped_model = accelerator.unwrap_model(model)
-    # try:
-    #     if accelerator.is_main_process:
-    #         unwrapped_model.push_to_hub(repo_name, private=True)
+    accelerator.print(f"Epoch {epoch} finished.")
+    accelerator.print(f"Pushing to HF hub...")
+    accelerator.wait_for_everyone()
+    unwrapped_model = accelerator.unwrap_model(model)
+    try:
+        if accelerator.is_main_process:
+            unwrapped_model.push_to_hub(repo_name, private=True)
 
-    # except Exception as e:
-    #     accelerator.print(e)
-    #     accelerator.print(f"Failed to push to hub")
+    except Exception as e:
+        accelerator.print(e)
+        accelerator.print(f"Failed to push to hub")
 
 
 
