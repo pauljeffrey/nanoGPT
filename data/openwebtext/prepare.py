@@ -28,10 +28,10 @@ if __name__ == '__main__':
     if not os.path.exists(args.data_path):
         os.mkdir(args.data_path)
     
-    dataset = load_dataset(args.dataset, num_proc=num_proc_load_dataset,verification_mode="no_checks", data_files= ["data/train-00032-of-00035-65723db2a29abae8.parquet"])#,
-                                                                                                                    # "data/train-00033-of-00035-bcb2a36aebfb89f9.parquet",
-                                                                                                                    # "data/train-00034-of-00035-3244e25f0c60266d.parquet","data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
-                                                                                                                    # "data/train-00030-of-00035-7722c3ba07048ce8.parquet"])
+    dataset = load_dataset(args.dataset, num_proc=num_proc_load_dataset,verification_mode="no_checks", data_files= ["data/train-00032-of-00035-65723db2a29abae8.parquet",
+                                                                                                                    "data/train-00033-of-00035-bcb2a36aebfb89f9.parquet",
+                                                                                                                    "data/train-00034-of-00035-3244e25f0c60266d.parquet","data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
+                                                                                                                    "data/train-00030-of-00035-7722c3ba07048ce8.parquet"])
     #, data_files= data_files,ignore_verifications=True)#, cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset") #verification_mode = None,cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset",  download_config = download_config
     # owt by default only contains the 'train' split, so create a test split
     print(dataset)

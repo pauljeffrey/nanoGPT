@@ -107,7 +107,6 @@ if not os.path.exists(out_dir):
     os.mkdir(out_dir)
 
 
-print(train_batch_size, eval_batch_size)
 # Dataloader
 train_dataloader = get_loader(train_data_path,  train_batch_size,
                window = window, block_size= block_size, split_type= 'train', device= accelerator.device, shuffle = True) 
@@ -149,12 +148,10 @@ if init_from == 'scratch':
                                 name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
                                 num_training_steps= max_iters,
                             )
-    #Prepare accelerator
-    model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
 
     last_step = 0
     
-elif init_from == 'resume':
+elif init_from == 'resume_local':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
@@ -194,12 +191,31 @@ elif init_from == 'resume':
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
-        #Prepare accelerator
-        model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
 
         last_step = checkpoint['iter_num']
         best_val_loss = checkpoint['best_val_loss']
         
+    elif init_from == 'resume_hub':
+        # init a new model from scratch
+        print("Downloading model from hub ...")
+        
+        model = GPTJForCausalLM.from_pretrained(repo_name).to(device)
+        
+
+        print(f"Model loaded successfully. Model has {count_parameters(model) / 1e6} million parameters...")
+        # optimizer
+        optimizer_cls = (
+                    torch.optim.AdamW 
+                )
+        optimizer = optimizer_cls(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+
+        lr_scheduler = get_scheduler(
+                                    name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
+                                    num_training_steps= max_iters,
+                                )
+
+        last_step = 0
+            
     else:
         print(f"Checkpoint path: '{ckpt_path}' does not exist...")
         last_step = 0
@@ -209,6 +225,8 @@ elif init_from == 'resume':
 #     model_args['block_size'] = block_size # so that the checkpoint will have the right value
 
 
+#Prepare accelerator
+model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
 
 if compile:
     print("compiling the model.... (takes a ~minuter)")
