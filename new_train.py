@@ -8,10 +8,10 @@ from dataset import *
 import numpy as np
 from accelerate import Accelerator, DeepSpeedPlugin
 from tqdm import tqdm
-
+from bitsandbytes.optim import Adam8bit
 
 from model import GPTConfig, GPT
-from transformers import GPTJConfig, GPTJForCausalLM, get_scheduler
+from transformers import GPTJConfig, GPTJForCausalLM, get_scheduler, AdamW, Adafactor
 import torch
 
 
@@ -81,6 +81,7 @@ device_type = 'cuda' if 'cuda' in device else 'cpu'
 scheduler = "cosine"
 zero_stage=2
 gradient_clipping = 1.0
+optimizer_name = "Adam8bit"
 
 # system
 #device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
@@ -139,10 +140,14 @@ if init_from == 'scratch':
 
     print(f"Model created successfully. Model has {count_parameters(model) / 1e6} million parameters...")
     # optimizer
-    optimizer_cls = (
-                torch.optim.AdamW 
-            )
-    optimizer = optimizer_cls(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+    if optimizer_name == 'Adam8bit':
+        optimizer = Adam8bit(model.parameters(), lr=learning_rate, betas=(beta1, beta2))
+        
+    elif optimizer_name == 'Adafactor':
+        
+        optimizer = Adafactor(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+    else:
+        optimizer = AdamW(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
 
     lr_scheduler = get_scheduler(
                                 name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
@@ -176,18 +181,22 @@ elif init_from == 'resume_local':
         model.load_state_dict(checkpoint['model'])
         model.to(device)
         print(f"Model checkpoint loaded successfully. Model has {count_parameters(model)/1e6} million parameters...")
-        
-        # optimizer
-        optimizer_cls = (
-                    torch.optim.AdamW 
-                )
-        
-        optimizer = optimizer_cls(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
 
+        # optimizer
+        if optimizer_name == 'Adam8bit':
+            optimizer = Adam8bit(model.parameters(), lr=learning_rate, betas=(beta1, beta2))
+            
+        elif optimizer_name == 'Adafactor':
+            
+            optimizer = Adafactor(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+        else:
+            optimizer = AdamW(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+        
         lr_scheduler = get_scheduler(
                             name= scheduler, optimizer=optimizer, num_warmup_steps= warmup_iters,
                             num_training_steps= max_iters,
                         )
+        
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
@@ -203,11 +212,16 @@ elif init_from == 'resume_local':
         
 
         print(f"Model loaded successfully. Model has {count_parameters(model) / 1e6} million parameters...")
-        # optimizer
-        optimizer_cls = (
-                    torch.optim.AdamW 
-                )
-        optimizer = optimizer_cls(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+        #Optimizer
+        if optimizer_name == 'Adam8bit':
+            optimizer = Adam8bit(model.parameters(), lr=learning_rate, betas=(beta1, beta2))
+            
+        elif optimizer_name == 'Adafactor':
+            
+            optimizer = Adafactor(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+        else:
+            optimizer = AdamW(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+        
 
         lr_scheduler = get_scheduler(
                                     name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
@@ -219,6 +233,7 @@ elif init_from == 'resume_local':
     else:
         print(f"Checkpoint path: '{ckpt_path}' does not exist...")
         last_step = 0
+        
 # crop down the model block size if desired, using model surgery
 # if block_size < model.config.block_size:
 #     model.crop_block_size(block_size)
