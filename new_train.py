@@ -203,36 +203,33 @@ elif init_from == 'local':
 
         last_step = checkpoint['iter_num']
         best_val_loss = checkpoint['best_val_loss']
-        
-    elif init_from == 'hub':
-        # init a new model from scratch
-        print("Downloading model from hub ...")
-        
-        model = GPTJForCausalLM.from_pretrained(repo_name).to(device)
-        
+    
+elif init_from == 'hub':
+    # init a new model from scratch
+    print("Downloading model from hub ...")
+    
+    model = GPTJForCausalLM.from_pretrained(repo_name).to(device)
+    
 
-        print(f"Model loaded successfully. Model has {count_parameters(model) / 1e6} million parameters...")
-        #Optimizer
-        if optimizer_name == 'Adam8bit':
-            optimizer = Adam8bit(model.parameters(), lr=learning_rate, betas=(beta1, beta2))
-            
-        elif optimizer_name == 'Adafactor':
-            
-            optimizer = Adafactor(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
-        else:
-            optimizer = AdamW(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+    print(f"Model loaded successfully. Model has {count_parameters(model) / 1e6} million parameters...")
+    #Optimizer
+    if optimizer_name == 'Adam8bit':
+        optimizer = Adam8bit(model.parameters(), lr=learning_rate, betas=(beta1, beta2))
         
-
-        lr_scheduler = get_scheduler(
-                                    name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
-                                    num_training_steps= max_iters,
-                                )
-
-        last_step = 0
-            
+    elif optimizer_name == 'Adafactor':
+        
+        optimizer = Adafactor(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
     else:
-        print(f"Checkpoint path: '{ckpt_path}' does not exist...")
-        last_step = 0
+        optimizer = AdamW(model.parameters(), lr=learning_rate, betas=(beta1, beta2), weight_decay=weight_decay)
+    
+
+    lr_scheduler = get_scheduler(
+                                name= scheduler , optimizer=optimizer, num_warmup_steps=warmup_iters,
+                                num_training_steps= max_iters,
+                            )
+
+    last_step = 0
+        
         
 # crop down the model block size if desired, using model surgery
 # if block_size < model.config.block_size:
