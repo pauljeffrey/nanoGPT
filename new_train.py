@@ -156,7 +156,7 @@ if init_from == 'scratch':
 
     last_step = 0
     
-elif init_from == 'resume_local':
+elif init_from == 'local':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
@@ -204,7 +204,7 @@ elif init_from == 'resume_local':
         last_step = checkpoint['iter_num']
         best_val_loss = checkpoint['best_val_loss']
         
-    elif init_from == 'resume_hub':
+    elif init_from == 'hub':
         # init a new model from scratch
         print("Downloading model from hub ...")
         
