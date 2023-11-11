@@ -300,34 +300,34 @@ for epoch in range(epochs):
                     "mfu": running_mfu*100, # convert to percentage
                 })
                 
-            if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
-                best_val_loss = eval_loss['eval']
-                if iter_num > 0:
-                    checkpoint = {
-                        'model': accelerator.unwrap_model(model).state_dict(),
-                        'optimizer': optimizer.state_dict(),
-                        'lr_scheduler': lr_scheduler.state_dict(),
-                        'model_args': model_args,
-                        'iter_num': iter_num,
-                        'best_val_loss': best_val_loss,
-                        'config': config,
-                    }
+            # if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
+            #     best_val_loss = eval_loss['eval']
+            #     if iter_num > 0:
+            #         checkpoint = {
+            #             'model': accelerator.unwrap_model(model).state_dict(),
+            #             'optimizer': optimizer.state_dict(),
+            #             'lr_scheduler': lr_scheduler.state_dict(),
+            #             'model_args': model_args,
+            #             'iter_num': iter_num,
+            #             'best_val_loss': best_val_loss,
+            #             'config': config,
+            #         }
                     
-                    print(f"saving checkpoint to {out_dir}")
+            #         print(f"saving checkpoint to {out_dir}")
                     
-                    torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+            #         torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
                     
-            if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0 and iter_num != 0:
-                accelerator.print(f"Pushing to HF hub...")
-                accelerator.wait_for_everyone()
-                unwrapped_model = accelerator.unwrap_model(model)
-                try:
-                    if accelerator.is_main_process:
-                        unwrapped_model.push_to_hub(repo_name)
+        if iter_num % (push_to_hub_every * gradient_accumulation_steps) == 0 and iter_num != 0:
+            accelerator.print(f"Pushing to HF hub...")
+            accelerator.wait_for_everyone()
+            unwrapped_model = accelerator.unwrap_model(model)
+            try:
+                if accelerator.is_main_process:
+                    unwrapped_model.push_to_hub(repo_name)
 
-                except Exception as e:
-                    accelerator.print(e)
-                    accelerator.print(f"Failed to push to hub")
+            except Exception as e:
+                accelerator.print(e)
+                accelerator.print(f"Failed to push to hub")
                     
         if iter_num == 0 and eval_only:
             break
