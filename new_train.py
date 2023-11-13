@@ -103,11 +103,6 @@ accelerator.wait_for_everyone()
 device = accelerator.device
 
 
-# Create output directory if it doesn't exist
-if not os.path.exists(out_dir):
-    os.mkdir(out_dir)
-
-
 # Dataloader
 train_dataloader = get_loader(train_data_path,  train_batch_size,
                window = window, block_size= block_size, split_type= 'train', device= accelerator.device, shuffle = True) 
@@ -302,6 +297,9 @@ for epoch in range(epochs):
                 
             # if eval_loss['eval'] < best_val_loss or always_save_checkpoint:
             #     best_val_loss = eval_loss['eval']
+            # Create output directory if it doesn't exist
+            # if not os.path.exists(out_dir):
+            #     os.mkdir(out_dir)
             #     if iter_num > 0:
             #         checkpoint = {
             #             'model': accelerator.unwrap_model(model).state_dict(),
