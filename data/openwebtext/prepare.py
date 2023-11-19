@@ -9,6 +9,7 @@ import argparse
 from datasets import load_dataset # huggingface datasets
 import datasets
 from transformers import AutoTokenizer
+import random
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PErsonalized Prompt Learning for Explainable Recommendation (PEPLER)')
@@ -20,6 +21,8 @@ if __name__ == '__main__':
                         help='specify the dataset you want to use from huggingface datasets')
     parser.add_argument('--repo_name', type=str, default="gpt-j",
                         help='specify the hugging face repository to push tokenizer.')
+    parser.add_argument('--n_files', type=int, default=16,
+                        help='Number of files to fetch for training dataset.')
      
     args = parser.parse_args()
 
@@ -27,14 +30,36 @@ if __name__ == '__main__':
     
     if not os.path.exists(args.data_path):
         os.mkdir(args.data_path)
-    
-    dataset = load_dataset(args.dataset, num_proc=num_proc_load_dataset,verification_mode="no_checks", data_files= ["data/train-00032-of-00035-65723db2a29abae8.parquet",
-                                                                                                                    "data/train-00033-of-00035-bcb2a36aebfb89f9.parquet",
-                                                                                                                    "data/train-00034-of-00035-3244e25f0c60266d.parquet"])#,"data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
-                                                                                                                    # "data/train-00030-of-00035-7722c3ba07048ce8.parquet"])
+        
+    data_files = ["data/train-00032-of-00035-65723db2a29abae8.parquet", "data/train-00033-of-00035-bcb2a36aebfb89f9.parquet", 
+                "data/train-00034-of-00035-3244e25f0c60266d.parquet","data/train-00029-of-00035-4fda4ad62c4ffb34.parquet",
+                "data/train-00030-of-00035-7722c3ba07048ce8.parquet", "data/train-00027-of-00035-35cffad4db0bf6b9.parquet",
+                "data/train-00026-of-00035-b0969ddc6407c018.parquet","data/train-00003-of-00035-872e837e0ce2b7b8.parquet",   
+                "data/train-00001-of-00035-0ffa1b2c1533e462.parquet","data/train-00002-of-00035-8d4d29f0bb986f30.parquet",
+                "data/train-00023-of-00035-1751103bdc6eb74c.parquet", "data/train-00031-of-00035-e8233b95e5b92059.parquet",
+                "data/train-00017-of-00035-e3e493e9d916d4f5.parquet", "data/train-00015-of-00035-b51782f9289bc156.parquet",
+                "data/train-00016-of-00035-5114eb1a53695860.parquet","data/train-00018-of-00035-aff94553959b76bb.parquet",
+                "data/train-00019-of-00035-4a50511881e93615.parquet",
+                "data/train-00004-of-00035-aa882747b6bc0966.parquet",
+                "data/train-00005-of-00035-ee2f210672df3e24.parquet",
+                "data/train-00006-of-00035-9ceea45c7dc9d680.parquet",
+                "data/train-00007-of-00035-a88af77899dccef5.parquet",
+                "data/train-00008-of-00035-bc479dde4069c8e7.parquet",
+                "data/train-00009-of-00035-6a1fbf9df2e2c6fa.parquet",
+                "data/train-00010-of-00035-17148c15857db18c.parquet",
+                "data/train-00011-of-00035-059107b445dd768c.parquet",
+                "data/train-00012-of-00035-427265944be3d6d5.parquet",
+                "data/train-00013-of-00035-79a895691d183168.parquet",
+                "data/train-00014-of-00035-5cefc8b356744961.parquet",
+                "data/train-00020-of-00035-62c504f2fccfd521.parquet",
+                "data/train-00021-of-00035-84c7013fd86f5308.parquet",
+                "data/train-00022-of-00035-64d5581b0d8c4437.parquet",
+                "data/train-00024-of-00035-98f735d5201badc2.parquet",
+                "data/train-00025-of-00035-ce57d6e0ac483164.parquet",]
+
+    dataset = load_dataset(args.dataset, num_proc=num_proc_load_dataset,verification_mode="no_checks", data_files= random.sample(data_files, args.n_files))
     #, data_files= data_files,ignore_verifications=True)#, cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset") #verification_mode = None,cache_dir= "/content/drive/MyDrive/nanoGPT/.cache/train_dataset",  download_config = download_config
     # owt by default only contains the 'train' split, so create a test split
-    print(dataset)
     split_dataset = dataset["train"].train_test_split(test_size=0.0005, seed=2357, shuffle=True)
     split_dataset['val'] = split_dataset.pop('test') # rename the test split to val
 
