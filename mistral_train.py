@@ -60,7 +60,7 @@ n_embd = 1536
 bos_token_id = 1
 eos_token_id = 2
 pad_token_id = 1
-n_key_value_heads = 4
+n_key_value_heads = 8
 use_cache = True
 activation_function = "silu"
 layer_norm_epsilon = 1e-6
@@ -133,6 +133,8 @@ if init_from == 'scratch':
 
     conf = MistralConfig(**model_args)
     model = MistralForCausalLM(conf)
+    
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n This is mistralforcausalLm\n\n\n\n\n\n\n\n\n\n\n\n\n")
     
     # Memory problems
     model.to(device)
