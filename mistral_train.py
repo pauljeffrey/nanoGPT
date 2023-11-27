@@ -23,7 +23,7 @@ def count_parameters(model):
 # I/O
 
 out_dir = './out'
-repo_name = "gpt-j"
+repo_name = "mistral"
 train_data_path = "./train.bin"
 eval_data_path = "./val.bin"
 eval_interval = 2048
@@ -39,8 +39,8 @@ epochs = 100
 
 # wandb logging
 wandb_log = False # disabled by default
-wandb_project = 'owt'
-wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
+wandb_project = 'owts'
+wandb_run_name = 'abdul_mistral' # 'run' + str(time.time())
 
 # data
 dataset = 'openwebtext'
