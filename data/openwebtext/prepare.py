@@ -23,7 +23,7 @@ if __name__ == '__main__':
                         help='specify the hugging face repository to push tokenizer.')
     parser.add_argument('--n_files', type=int, default=16,
                         help='Number of files to fetch for training dataset.')
-    parser.add_argument('--model_class', type=int, default="gpt-j",
+    parser.add_argument('--model_class', type=str, default="gpt-j",
                         help='Model class to use. It only supports gpt-j and Mistral for now.')
     args = parser.parse_args()
 
