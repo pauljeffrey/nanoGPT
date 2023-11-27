@@ -133,8 +133,7 @@ if init_from == 'scratch':
 
     conf = MistralConfig(**model_args)
     model = MistralForCausalLM(conf)
-    
-    print("\n\n\n\n\n\n\n\n\n\n\n\n\n This is mistralforcausalLm\n\n\n\n\n\n\n\n\n\n\n\n\n")
+ 
     
     # Memory problems
     model.to(device)
