@@ -125,7 +125,7 @@ if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
     # determine the vocab size we'll use for from-scratch training
-    print("defaulting to vocab_size of 50400 (50257 rounded up for efficiency)")
+    #print("defaulting to vocab_size of 50400 (50257 rounded up for efficiency)")
 
     conf = GPTJConfig(**model_args)
     model = GPTJForCausalLM(conf)
@@ -165,14 +165,7 @@ elif init_from == 'local':
         # create the model
         conf = GPTJConfig(**model_args)
         model = GPTJForCausalLM(conf)
-        #state_dict = checkpoint['model']
-        # fix the keys of the state dictionary :(
-        # honestly no idea how checkpoints sometimes get this prefix, have to debug more
-        # unwanted_prefix = '_orig_mod.'
-        # for k,v in list(state_dict.items()):
-        #     if k.startswith(unwanted_prefix):
-        #         print(K)
-        #         state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
+    
         model.load_state_dict(checkpoint['model'])
         model.to(device)
         print(f"Model checkpoint loaded successfully. Model has {count_parameters(model)/1e6} million parameters...")
@@ -224,12 +217,6 @@ elif init_from == 'hub':
                             )
 
     last_step = 0
-        
-        
-# crop down the model block size if desired, using model surgery
-# if block_size < model.config.block_size:
-#     model.crop_block_size(block_size)
-#     model_args['block_size'] = block_size # so that the checkpoint will have the right value
 
 
 #Prepare accelerator
@@ -240,9 +227,6 @@ if compile:
     unoptimized_model = model
     model = torch.compile(model)
     
-    
-# Prepare accelerator
-#model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(model, optimizer, lr_scheduler, train_dataloader, val_dataloader)
 
 checkpoint= None #free up memory
 
