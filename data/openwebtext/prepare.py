@@ -23,7 +23,8 @@ if __name__ == '__main__':
                         help='specify the hugging face repository to push tokenizer.')
     parser.add_argument('--n_files', type=int, default=16,
                         help='Number of files to fetch for training dataset.')
-     
+    parser.add_argument('--model_class', type=int, default="gpt-j",
+                        help='Model class to use. It only supports gpt-j and Mistral for now.')
     args = parser.parse_args()
 
     num_proc_load_dataset = args.num_proc
@@ -66,7 +67,10 @@ if __name__ == '__main__':
 
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
     #enc = tiktoken.get_encoding("gpt2")
-    enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b", use_fast=True)
+    if args.model_class == "gpt-j":
+        enc = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6b", use_fast=True)
+    else:
+        enc = AutoTokenizer.from_pretrained("mistralai/Mistral-7b-v0.1")
     enc.push_to_hub(args.repo_name, private=True)
     
     if enc.pad_token is None:
