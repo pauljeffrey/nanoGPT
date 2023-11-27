@@ -11,7 +11,7 @@ from tqdm import tqdm
 from bitsandbytes.optim import Adam8bit
 
 from model import GPTConfig, GPT
-from transformers import MistralModel, MistralConfig, AutoModelForCausalLM, get_scheduler, AdamW, Adafactor
+from transformers import MistralForCausalLM, MistralConfig, AutoModelForCausalLM, get_scheduler, AdamW, Adafactor
 import torch
 
 
@@ -132,7 +132,7 @@ if init_from == 'scratch':
     print("defaulting to vocab_size of 50400 (50257 rounded up for efficiency)")
 
     conf = MistralConfig(**model_args)
-    model = MistralModel(conf)
+    model = MistralForCausalLM(conf)
     
     # Memory problems
     model.to(device)
@@ -168,7 +168,7 @@ elif init_from == 'local':
             model_args[k] = checkpoint_model_args[k]
         # create the model
         conf = MistralConfig(**model_args)
-        model = MistralModel(conf)
+        model = MistralForCausalLM(conf)
         #state_dict = checkpoint['model']
         # fix the keys of the state dictionary :(
         # honestly no idea how checkpoints sometimes get this prefix, have to debug more
