@@ -12,7 +12,7 @@ from transformers import AutoTokenizer
 import random
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PErsonalized Prompt Learning for Explainable Recommendation (PEPLER)')
+    parser = argparse.ArgumentParser(description='Data preparation for training.')
     parser.add_argument('--data_path', type=str, default=None,
                         help='path to store the processed data downloaded from huggingface')
     parser.add_argument('--num_proc', type=int, default=8,
