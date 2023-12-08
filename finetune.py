@@ -46,7 +46,7 @@ def evaluate(model, val_dataloader):
 
     with torch.no_grad():
         for batch in tqdm(val_dataloader):
-            loss = model(**batch).loss
+            loss = model(input_ids=batch["input_ids"], labels=batch["labels"]).loss
 
             loss_values = accelerator.gather_for_metrics({"loss": loss.detach()})
 
@@ -145,8 +145,7 @@ def train(accelerator, config):
         train_loss = MeanMetric(nan_strategy="error").to(model.device)
         for step, batch in enumerate(tqdm(train_dataloader)):
             model.train()
-            print(batch)
-            outputs = model(**batch)
+            outputs = model(input_ids=batch["input_ids"], labels= batch["labels"])
             loss = outputs.loss
 
             # gather loss before backprop in case of gradient accumulation
