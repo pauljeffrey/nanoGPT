@@ -82,6 +82,7 @@ def load_data(config, tokenizer):
         val_dataset = dataset["validation"]
     else:
         dataset = dataset.train_test_split(test_size=.05, seed=config["seed"])
+        print(dataset)
         train_dataset, val_dataset = dataset["train"], dataset["test"]
 
     if config["streaming"] is False:
