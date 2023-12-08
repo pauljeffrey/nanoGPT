@@ -1,6 +1,6 @@
 # model/tokenizer
 repo_name : "Gptfinetune0/gpt-j"
-gradient_checkpointing: true
+gradient_checkpointing: false
 save_name: # CHANGE
 n_positions: 2048
 sliding_window: 4096
