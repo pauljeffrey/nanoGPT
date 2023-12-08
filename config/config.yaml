@@ -19,6 +19,7 @@ layer_norm_epsilon: 1e-6
 dropout: 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 vocab_size: 32000
 
+
 # dataset
 streaming: false
 num_proc: 8
@@ -29,6 +30,7 @@ input_column: "prompt"
 output_column: "response"
 remove_columns: ["source", "prompt"]
 eos_token: null
+n_samples: 100
 
 
 # train dynamics

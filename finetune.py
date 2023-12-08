@@ -145,6 +145,7 @@ def train(accelerator, config):
         train_loss = MeanMetric(nan_strategy="error").to(model.device)
         for step, batch in enumerate(tqdm(train_dataloader)):
             model.train()
+            print(batch)
             outputs = model(**batch)
             loss = outputs.loss
 
