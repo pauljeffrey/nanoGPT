@@ -71,7 +71,7 @@ def load_data(config, tokenizer):
         dataset = load_dataset("json", data_files=files, split="train")
 
     else:
-        dataset = load_dataset(dataset_path)
+        dataset = load_dataset(dataset_path, split="train")
         #dataset = load_dataset(dataset_path, revision= config["data_version"], split=config["n_samples"]) #"train")
 
     if dataset.get("test"):
@@ -82,7 +82,7 @@ def load_data(config, tokenizer):
         val_dataset = dataset["validation"]
     else:
         dataset = dataset.train_test_split(test_size=.05, seed=config["seed"])
-        print(dataset)
+        #print(dataset)
         train_dataset, val_dataset = dataset["train"], dataset["test"]
 
     if config["streaming"] is False:
