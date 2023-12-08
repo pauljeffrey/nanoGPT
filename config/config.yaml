@@ -64,7 +64,7 @@ scheduler: "cosine"
 
 
 # logging
-wandb: true
+wandb: false
 wandb_entity: # CHANGE
 wandb_project_name: # CHANGE
 wandb_log: False # disabled by default
