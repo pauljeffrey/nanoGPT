@@ -74,16 +74,10 @@ def load_data(config, tokenizer):
         dataset = load_dataset(dataset_path, split="train")
         #dataset = load_dataset(dataset_path, revision= config["data_version"], split=config["n_samples"]) #"train")
 
-    if dataset.get("test"):
-        train_dataset = dataset["train"]
-        val_dataset = dataset["test"]
-    elif dataset.get("validation"):
-        train_dataset = dataset["train"]
-        val_dataset = dataset["validation"]
-    else:
-        dataset = dataset.train_test_split(test_size=.05, seed=config["seed"])
-        #print(dataset)
-        train_dataset, val_dataset = dataset["train"], dataset["test"]
+
+    dataset = dataset.train_test_split(test_size=.05, seed=config["seed"])
+    #print(dataset)
+    train_dataset, val_dataset = dataset["train"], dataset["test"]
 
     if config["streaming"] is False:
         kwargs = {"num_proc": config["num_proc"]}
