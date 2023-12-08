@@ -15,6 +15,7 @@ from omegaconf import OmegaConf
 from bitsandbytes.optim import Adam8bit
 
 torch.backends.cuda.matmul.allow_tf32 = True
+
 config = OmegaConf.load("./config/config.yaml")
 
 #device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
@@ -226,11 +227,12 @@ def train(accelerator, config):
 if __name__ == "__main__":
     # parse arguments by reading in a config
     parser = ArgumentParser()
-    parser.add_argument("--config", type=str, default="config.yaml")
+    parser.add_argument("--config", type=str)
 
     args = parser.parse_args()
 
-    config = OmegaConf.load(args.config)
+    if args.config:
+        config = OmegaConf.load(args.config)
 
     if config["wandb"]:
         accelerator = Accelerator(log_with="wandb")
@@ -242,4 +244,5 @@ if __name__ == "__main__":
     else:
         accelerator = Accelerator()
 
+    print()
     train(accelerator, config=config)
