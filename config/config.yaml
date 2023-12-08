@@ -87,4 +87,4 @@ beta2: 0.95
 optimizer_name: "Adam8bit"
 
 # pytorch setting
-compile: True # use PyTorch 2.0 to compile the model to be faster
+compile: false # use PyTorch 2.0 to compile the model to be faster
