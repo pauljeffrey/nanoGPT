@@ -27,7 +27,7 @@ data_version: null
 max_length: 256
 input_column: "prompt"
 output_column: "response"
-remove_columns: ["source", "prompt","id"]
+remove_columns: ["source", "prompt"]
 eos_token: null
 
 
