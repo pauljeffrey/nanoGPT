@@ -60,7 +60,7 @@ def tokenize_inputs(tokenizer, examples, input_column, output_column, max_length
 def load_data(config, tokenizer):
     dataset_path = config["dataset_path"]
 
-    if os.path.exists(dataset_path):
+    if dataset_path is not None and os.path.exists(dataset_path):
         if os.path.isdir(dataset_path):
             files = glob.glob(os.path.join(dataset_path, "*_clean.jsonl"))
         else:
@@ -94,14 +94,14 @@ def load_data(config, tokenizer):
         lambda ele: tokenize_inputs(tokenizer, ele, config["input_column"], config["output_column"],
                                     max_length=config["max_length"], dataset_eos_token = config["eos_token"]),
         batched=True,
-        remove_columns=["source", "prompt", "id"],
+        remove_columns=config["remove_columns"],
         **kwargs
     )
     val_dataset = val_dataset.map(
         lambda ele: tokenize_inputs(tokenizer, ele, config["input_column"], config["output_column"],
                                     max_length=config["max_length"], dataset_eos_token = config["eos_token"]),
         batched=True,
-        remove_columns=["source", "prompt","id"],
+        remove_columns=config["remove_columns"],
         **kwargs
     )
 
