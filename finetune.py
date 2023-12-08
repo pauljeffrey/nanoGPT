@@ -101,13 +101,7 @@ def train(accelerator, config):
     else:
         optimizer = AdamW(model.parameters(), lr=config["learning_rate"], betas=(config["beta1"],config["beta2"]), weight_decay=config["weight_decay"])
 
-    
-
-    if accelerator.state.deepspeed_plugin is not None:
-        gradient_accumulation_steps = accelerator.state.deepspeed_plugin.deepspeed_config[
-            "gradient_accumulation_steps"
-        ]
-
+    gradient_accumulation_steps = gradient_accumulation_steps=config["gradient_accumulation_steps"]
     # decay to min_lr instead of 0
     lr_ratio = config["min_lr"] / config["lr"]
     accelerator.print(f"Len of train_dataloader: {len(train_dataloader)}")
@@ -117,6 +111,7 @@ def train(accelerator, config):
     accelerator.print(f"Total training steps: {total_num_steps}")
 
     # Create Dummy Scheduler 
+
     scheduler = get_scheduler(
         name="cosine",
         optimizer=optimizer,
