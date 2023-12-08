@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 #from read import read_config
 from accelerate import Accelerator, DeepSpeedPlugin
 from accelerate.utils import DummyScheduler, DummyOptim, set_seed
-from data import load_data
+from finetune_data_prepare import load_data
 from torchmetrics import MeanMetric
 from tqdm import tqdm
 import wandb
