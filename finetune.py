@@ -222,7 +222,7 @@ def train(accelerator, config):
 if __name__ == "__main__":
     # parse arguments by reading in a config
     parser = ArgumentParser()
-    parser.add_argument("--config", type=str)
+    parser.add_argument("--config", type=str, help="Specify a yaml config file to configure training settings..")
 
     args = parser.parse_args()
 
@@ -239,5 +239,4 @@ if __name__ == "__main__":
     else:
         accelerator = Accelerator()
 
-    print()
     train(accelerator, config=config)

@@ -1,7 +1,8 @@
 # model/tokenizer
 repo_name : "facebook/opt-125m"
+save_name: "Gptfinetune0/test"
 gradient_checkpointing: false
-save_name: # CHANGE
+
 bos_token_id: 1
 eos_token_id: 2
 pad_token_id: 1
@@ -42,10 +43,9 @@ eval_iters: 500
 eval_only: False # if True, script exits right after the first eval
 push_to_hub_every: 32
 always_save_checkpoint: True # if True, always save a checkpoint after each eval
-epochs: 100
 gradient_accumulation_steps: 32 #128 # used to simulate larger batch sizes
 train_batch_size: 1 # if gradient_accumulation_steps > 1, this is the micro-batch size
-eval_batch_size: 8  # train_batch_size * 16
+eval_batch_size: 16  # train_batch_size * 16
 block_size: 256 #1024
 decay_lr: True # whether to decay the learning rate
 warmup_iters: 2000 # how many steps to warm up for
