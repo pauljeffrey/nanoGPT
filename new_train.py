@@ -9,6 +9,7 @@ import numpy as np
 from accelerate import Accelerator, DeepSpeedPlugin
 from tqdm import tqdm
 from bitsandbytes.optim import Adam8bit
+from omegaconf import OmegaConf
 
 from model import GPTConfig, GPT
 from transformers import GPTJConfig, GPTJForCausalLM, get_scheduler, AdamW, Adafactor
@@ -22,66 +23,79 @@ def count_parameters(model):
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
 
-out_dir = './out'
-repo_name = "gpt-j"
-train_data_path = "./train.bin"
-eval_data_path = "./val.bin"
-eval_interval = 2048
-log_interval = 512
-eval_iters = 500
-num_proc= 8
-eval_only = False # if True, script exits right after the first eval
-push_to_hub_every=32
-always_save_checkpoint = True # if True, always save a checkpoint after each eval
-init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
-window = 64
-epochs = 100
+config = OmegaConf.load("./config/gpt_j_config.yaml")
+
+
+out_dir = config["out_dir"]
+repo_name = config["repo_name"]
+train_data_path = config["train_data_path"]
+eval_data_path = config["eval_data_path"]
+eval_interval = config["eval_interval"]
+log_interval = config["log_interval"]
+eval_iters = config["eval_iters"]
+num_proc= config["num_proc"]
+eval_only = config["eval_only"] # if True, script exits right after the first eval
+push_to_hub_every=config["push_to_hub_every"]
+always_save_checkpoint = config["always_save_checkpoint"] # if True, always save a checkpoint after each eval
+init_from = config["init_from"] # 'scratch' or 'resume' or 'gpt2*'
+window = config["window"]
+epochs = config["epochs"]
 
 # wandb logging
-wandb_log = False # disabled by default
-wandb_project = 'owt'
-wandb_run_name = 'gptj-1b' # 'run' + str(time.time())
+wandb_log = config["wandb_log"] # disabled by default
+wandb_project = config["wandb_project"]
+wandb_run_name = config["wandb_run_name"] # 'run' + str(time.time())
 
 # data
-dataset = 'openwebtext'
-gradient_accumulation_steps = 32 #128 # used to simulate larger batch sizes
-train_batch_size = 2 # if gradient_accumulation_steps > 1, this is the micro-batch size
-eval_batch_size = train_batch_size * 2
-block_size = 256 #1024
+dataset = config["dataset"]
+gradient_accumulation_steps = config["gradient_accumulation_steps"] #128 # used to simulate larger batch sizes
+train_batch_size = config["train_batch_size"] # if gradient_accumulation_steps > 1, this is the micro-batch size
+eval_batch_size = config["eval_batch_size"]
+block_size = config["block_size"] 
+
 
 # model
-n_positions=2048
-rotary_dim = 64
-n_layer = 24 #28
-n_head = 24 
-n_embd = 1536 
-bos_token_id = 50256
-eos_token_id = 50256
-n_inner = None
-activation_function = "gelu_new"
-layer_norm_epsilon = 1e-5
-use_cache=True
-dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
-bias = False # do we use bias inside LayerNorm and Linear layers?
-vocab_size=50400
+n_positions= config["n_positions"]
+sliding_window = config["sliding_window"]
+intermediate_size = config["intermediate_size"]
+rope_theta=config["rope_theta"]
+n_layer = config["n_layer"] #28
+n_head = config["n_head"]
+n_embd = config["n_embd"]
+bos_token_id = config["bos_token_id"]
+eos_token_id = config["eos_token_id"]
+pad_token_id = config["pad_token_id"]
+n_key_value_heads = config["n_key_value_heads"]
+use_cache = config["use_cache"]
+activation_function = config["activation_functioin"]
+layer_norm_epsilon = config["layer_norm_epsilon"] #1e-6
+dropout = config["dropout"] # for pretraining 0 is good, for finetuning try 0.1+
+vocab_size= config["vocab_size"] #32000
 
 # adamw optimizer
-learning_rate = 6e-4 # max learning rate
-max_iters = 2000000 # total number of training iterations
-weight_decay = 1e-1
-beta1 = 0.9
-beta2 = 0.95
+learning_rate = config["learning_rate"] #6e-4 # max learning rate
+max_iters = config["max_iters"] #2000000 # total number of training iterations
+weight_decay = config["weight_decay"] #1e-1
+beta1 = config["beta1"] #0.9
+beta2 = config["beta2"] #0.95
 # learning rate decay settings
-decay_lr = True # whether to decay the learning rate
-warmup_iters = 2000 # how many steps to warm up for
-lr_decay_iters = 600000 # should be ~= max_iters per Chinchilla
-min_lr = 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
-device= "cuda"
+decay_lr = config["decay_lr"] #True # whether to decay the learning rate
+warmup_iters = config["warmup_iters"] #2000 # how many steps to warm up for
+lr_decay_iters = config["lr_decay_iters"] #600000 # should be ~= max_iters per Chinchilla
+min_lr = config["min_lr"] #6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
+device= config["device"] #"cuda"
 device_type = 'cuda' if 'cuda' in device else 'cpu' 
-scheduler = "cosine"
-zero_stage=2
-gradient_clipping = 1.0
-optimizer_name = "Adam8bit"
+scheduler = config["scheduler"] #"cosine"
+zero_stage= config["zero_stage"] #2
+gradient_clipping = config["gradient_clipping"] #1.0
+optimizer_name = config["optimizer_name"]#"Adam8bit"
+
+
+# model
+rotary_dim = config["rotary_dim"]
+n_inner = config["n_inner"]
+bias = config["bias"] # do we use bias inside LayerNorm and Linear layers?
+
 
 # system
 #device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks

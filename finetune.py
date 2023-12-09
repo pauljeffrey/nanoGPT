@@ -16,21 +16,16 @@ from bitsandbytes.optim import Adam8bit
 
 torch.backends.cuda.matmul.allow_tf32 = True
 
-config = OmegaConf.load("./config/config.yaml")
+config = OmegaConf.load("./config/finetune_config.yaml")
 
 #device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
 compile = True # use PyTorch 2.0 to compile the model to be faster
 
 
-
-
-
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
 best_val_loss = 1e9
-
-
 
 
 def format_metrics(metrics, split, prefix=""):
