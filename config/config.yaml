@@ -1,5 +1,5 @@
 # model/tokenizer
-repo_name : "Gptfinetune0/gpt-j"
+repo_name : "facebook/opt-125m"
 gradient_checkpointing: false
 save_name: # CHANGE
 n_positions: 2048
