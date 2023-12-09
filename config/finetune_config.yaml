@@ -8,7 +8,6 @@ eos_token_id: 2
 pad_token_id: 1
 use_cache: True
 dropout: 0.0 # for pretraining 0 is good, for finetuning try 0.1+
-vocab_size: 32000
 
 
 # dataset
@@ -21,11 +20,10 @@ input_column: "prompt"
 output_column: "response"
 remove_columns: ["source", "prompt"]
 eos_token: null
-n_samples: 100
+#n_samples: 100
 
 
 # train dynamics
-lr: 2.0e-5
 min_lr: 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 weight_decay: 0.0 # increase during finetuning.
 eval_every: 500
@@ -59,9 +57,6 @@ scheduler: "cosine"
 wandb: false
 wandb_entity: # CHANGE
 wandb_project_name: # CHANGE
-wandb_log: False # disabled by default
-wandb_project: 'owts_finetune'
-wandb_run_name: 'abdul_finetune' # 'run' + str(time.time())
 seed: 42
 
 #Accelerate config
@@ -70,7 +65,7 @@ zero_stage: 2
 gradient_clipping: 1.0
 
 # Optimizer
-learning_rate: 6e-4 # max learning rate, set to about 2e-5 for finetuning.
+learning_rate: 2e-5 # max learning rate, set to about 2e-5 for finetuning.
 max_iters: 2000000 # total number of training iterations
 beta1: 0.9
 beta2: 0.95

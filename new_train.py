@@ -38,7 +38,6 @@ eval_only = config["eval_only"] # if True, script exits right after the first ev
 push_to_hub_every=config["push_to_hub_every"]
 always_save_checkpoint = config["always_save_checkpoint"] # if True, always save a checkpoint after each eval
 init_from = config["init_from"] # 'scratch' or 'resume' or 'gpt2*'
-window = config["window"]
 epochs = config["epochs"]
 
 # wandb logging
