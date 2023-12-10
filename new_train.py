@@ -54,9 +54,6 @@ block_size = config["block_size"]
 
 
 # model
-n_positions= config["n_positions"]
-sliding_window = config["sliding_window"]
-intermediate_size = config["intermediate_size"]
 rope_theta=config["rope_theta"]
 n_layer = config["n_layer"] #28
 n_head = config["n_head"]
@@ -64,12 +61,11 @@ n_embd = config["n_embd"]
 bos_token_id = config["bos_token_id"]
 eos_token_id = config["eos_token_id"]
 pad_token_id = config["pad_token_id"]
-n_key_value_heads = config["n_key_value_heads"]
 use_cache = config["use_cache"]
 activation_function = config["activation_functioin"]
 layer_norm_epsilon = config["layer_norm_epsilon"] #1e-6
 dropout = config["dropout"] # for pretraining 0 is good, for finetuning try 0.1+
-vocab_size= config["vocab_size"] #32000
+vocab_size= config["vocab_size"]
 
 # adamw optimizer
 learning_rate = config["learning_rate"] #6e-4 # max learning rate
