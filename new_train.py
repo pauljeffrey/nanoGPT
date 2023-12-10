@@ -51,7 +51,7 @@ gradient_accumulation_steps = config["gradient_accumulation_steps"] #128 # used 
 train_batch_size = config["train_batch_size"] # if gradient_accumulation_steps > 1, this is the micro-batch size
 eval_batch_size = config["eval_batch_size"]
 block_size = config["block_size"] 
-
+window=config["window"]
 
 # model
 rope_theta=config["rope_theta"]

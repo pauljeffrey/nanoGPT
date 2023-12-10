@@ -20,6 +20,7 @@ vocab_size: 50400
 rotary_dim: 64
 n_inner: null
 bias: False
+window: 64
 
 
 # dataset
