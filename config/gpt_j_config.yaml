@@ -30,7 +30,6 @@ eval_data_path: "./val.bin"
 data_version: null
 max_length: 256
 
-
 # train dynamics
 min_lr: 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 weight_decay: 1e-1 # increase during finetuning.
