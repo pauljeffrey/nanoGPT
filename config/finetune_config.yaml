@@ -65,7 +65,7 @@ zero_stage: 2
 gradient_clipping: 1.0
 
 # Optimizer
-learning_rate: 2e-5 # max learning rate, set to about 2e-5 for finetuning.
+lr: 2e-5 # max learning rate, set to about 2e-5 for finetuning.
 max_iters: 2000000 # total number of training iterations
 beta1: 0.9
 beta2: 0.95

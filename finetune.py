@@ -89,13 +89,13 @@ def train(accelerator, config):
     # karpathy doesn't decay embeddding, maybe we should exclude
     # https://github.com/karpathy/minGPT/commit/bbbdac74fa9b2e55574d70056163ffbae42310c1#diff-2075fa9c224b395be5bda85544dd36572b59c76c54562819eadadbf268602834R157s
     if config["optimizer_name"] == 'Adam8bit':
-        optimizer = Adam8bit(model.parameters(), lr=config["learning_rate"], betas=(config["beta1"],config["beta2"]))
+        optimizer = Adam8bit(model.parameters(), lr=config["lr"], betas=(config["beta1"],config["beta2"]))
         
     elif config["optimizer_name"]== 'Adafactor':
         
-        optimizer = Adafactor(model.parameters(), lr=config["learning_rate"], betas=(config["beta1"],config["beta2"]), weight_decay=config["weight_decay"])
+        optimizer = Adafactor(model.parameters(), lr=config["lr"], betas=(config["beta1"],config["beta2"]), weight_decay=config["weight_decay"])
     else:
-        optimizer = AdamW(model.parameters(), lr=config["learning_rate"], betas=(config["beta1"],config["beta2"]), weight_decay=config["weight_decay"])
+        optimizer = AdamW(model.parameters(), lr=config["lr"], betas=(config["beta1"],config["beta2"]), weight_decay=config["weight_decay"])
 
     gradient_accumulation_steps = gradient_accumulation_steps=config["gradient_accumulation_steps"]
     # decay to min_lr instead of 0
